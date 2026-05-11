@@ -233,8 +233,8 @@ export default function MainPlanPage(): JSX.Element {
                             <button
                                 onClick={() => handleFilterChange('all')}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition ${filterStatus === 'all'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-slate-800/50 border border-slate-700/50 text-slate-300 hover:text-white'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-slate-800/50 border border-slate-700/50 text-slate-300 hover:text-white'
                                     }`}
                             >
                                 All
@@ -242,8 +242,8 @@ export default function MainPlanPage(): JSX.Element {
                             <button
                                 onClick={() => handleFilterChange('active')}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition ${filterStatus === 'active'
-                                    ? 'bg-green-600 text-white'
-                                    : 'bg-slate-800/50 border border-slate-700/50 text-slate-300 hover:text-white'
+                                        ? 'bg-green-600 text-white'
+                                        : 'bg-slate-800/50 border border-slate-700/50 text-slate-300 hover:text-white'
                                     }`}
                             >
                                 Active
@@ -251,8 +251,8 @@ export default function MainPlanPage(): JSX.Element {
                             <button
                                 onClick={() => handleFilterChange('inactive')}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition ${filterStatus === 'inactive'
-                                    ? 'bg-slate-600 text-white'
-                                    : 'bg-slate-800/50 border border-slate-700/50 text-slate-300 hover:text-white'
+                                        ? 'bg-slate-600 text-white'
+                                        : 'bg-slate-800/50 border border-slate-700/50 text-slate-300 hover:text-white'
                                     }`}
                             >
                                 Inactive
@@ -260,8 +260,8 @@ export default function MainPlanPage(): JSX.Element {
                             <button
                                 onClick={() => handleFilterChange('archived')}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition ${filterStatus === 'archived'
-                                    ? 'bg-orange-600 text-white'
-                                    : 'bg-slate-800/50 border border-slate-700/50 text-slate-300 hover:text-white'
+                                        ? 'bg-orange-600 text-white'
+                                        : 'bg-slate-800/50 border border-slate-700/50 text-slate-300 hover:text-white'
                                     }`}
                             >
                                 Archived
@@ -279,58 +279,19 @@ export default function MainPlanPage(): JSX.Element {
                     </div>
                 </div>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                    <div className="flex items-center justify-center gap-4 my-4">
-                        <button
-                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                            disabled={currentPage === 1}
-                            className={`p-2 rounded-lg border border-slate-700/50 transition ${currentPage === 1
-                                ? 'opacity-50 cursor-not-allowed text-slate-500'
-                                : 'text-slate-400 hover:text-white hover:border-slate-600'
-                                }`}
-                        >
-                            <ChevronLeft size={20} />
-                        </button>
-
-                        <div className="flex items-center gap-2">
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                <button
-                                    key={page}
-                                    onClick={() => setCurrentPage(page)}
-                                    className={`w-10 h-10 rounded-lg text-sm font-medium transition ${currentPage === page
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-white hover:border-slate-600'
-                                        }`}
-                                >
-                                    {page}
-                                </button>
-                            ))}
-                        </div>
-
-                        <button
-                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                            disabled={currentPage === totalPages}
-                            className={`p-2 rounded-lg border border-slate-700/50 transition ${currentPage === totalPages
-                                ? 'opacity-50 cursor-not-allowed text-slate-500'
-                                : 'text-slate-400 hover:text-white hover:border-slate-600'
-                                }`}
-                        >
-                            <ChevronRight size={20} />
-                        </button>
-                    </div>
-                )}
                 {/* Plans List */}
                 <div className="space-y-4 mb-8">
                     {paginatedPlans.length > 0 ? (
                         paginatedPlans.map((plan) => (
-                            <Link
+                            <div
                                 key={plan.id}
-                                href={""}
-                                className="block p-6 rounded-xl border border-slate-700/50 bg-slate-800/30 hover:bg-slate-700/40 hover:border-blue-500/50 transition cursor-pointer backdrop-blur-sm group relative"
+                                className="group p-6 rounded-xl border border-slate-700/50 bg-slate-800/30 hover:bg-slate-700/40 hover:border-blue-500/50 transition backdrop-blur-sm relative"
                             >
                                 <div className="flex items-start justify-between mb-4">
-                                    <div className="flex items-start gap-4 flex-1">
+                                    <Link
+                                        href={""}
+                                        className="flex items-start gap-4 flex-1 cursor-pointer"
+                                    >
                                         {/* Icon */}
                                         <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-500/30 transition">
                                             <Folder className="text-blue-400" size={24} />
@@ -342,12 +303,6 @@ export default function MainPlanPage(): JSX.Element {
                                                 <h3 className="text-lg font-semibold group-hover:text-blue-400 transition">
                                                     {plan.name}
                                                 </h3>
-                                                <button
-                                                    onClick={(e) => openStatusModal(e, plan)}
-                                                    className={`text-xs px-2 py-1 rounded-full font-medium transition hover:opacity-80 cursor-pointer ${getStatusColor(plan.status)}`}
-                                                >
-                                                    {getStatusIcon(plan.status)} {plan.status}
-                                                </button>
                                             </div>
                                             <p className="text-slate-400 text-sm mb-3 line-clamp-2">
                                                 {plan.description}
@@ -365,14 +320,37 @@ export default function MainPlanPage(): JSX.Element {
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </Link>
 
-                                    {/* Arrow */}
-                                    <div className="text-slate-500 group-hover:text-blue-400 transition flex-shrink-0">
-                                        →
+                                    {/* Right Section */}
+                                    <div className="flex flex-col items-end gap-3 flex-shrink-0 ml-4">
+                                        {/* Status Badge */}
+                                        <div
+                                            onClick={(e) => openStatusModal(e, plan)}
+                                            className={`text-xs px-3 py-1 rounded-full font-medium transition cursor-pointer hover:opacity-80 ${getStatusColor(plan.status)}`}
+                                        >
+                                            {getStatusIcon(plan.status)} {plan.status}
+                                        </div>
+
+                                        {/* Change Status Button */}
+                                        <button
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                openStatusModal(e, plan);
+                                            }}
+                                            className="px-3 py-1.5 rounded-lg bg-slate-700/50 border border-slate-600/50 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700 hover:border-slate-500 transition"
+                                        >
+                                            Change
+                                        </button>
+
+                                        {/* Arrow */}
+                                        <div className="text-slate-500 group-hover:text-blue-400 transition text-lg mt-1">
+                                            →
+                                        </div>
                                     </div>
                                 </div>
-                            </Link>
+                            </div>
                         ))
                     ) : (
                         // Empty State
@@ -404,8 +382,8 @@ export default function MainPlanPage(): JSX.Element {
                             onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                             disabled={currentPage === 1}
                             className={`p-2 rounded-lg border border-slate-700/50 transition ${currentPage === 1
-                                ? 'opacity-50 cursor-not-allowed text-slate-500'
-                                : 'text-slate-400 hover:text-white hover:border-slate-600'
+                                    ? 'opacity-50 cursor-not-allowed text-slate-500'
+                                    : 'text-slate-400 hover:text-white hover:border-slate-600'
                                 }`}
                         >
                             <ChevronLeft size={20} />
@@ -417,8 +395,8 @@ export default function MainPlanPage(): JSX.Element {
                                     key={page}
                                     onClick={() => setCurrentPage(page)}
                                     className={`w-10 h-10 rounded-lg text-sm font-medium transition ${currentPage === page
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-white hover:border-slate-600'
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-white hover:border-slate-600'
                                         }`}
                                 >
                                     {page}
@@ -430,8 +408,8 @@ export default function MainPlanPage(): JSX.Element {
                             onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                             disabled={currentPage === totalPages}
                             className={`p-2 rounded-lg border border-slate-700/50 transition ${currentPage === totalPages
-                                ? 'opacity-50 cursor-not-allowed text-slate-500'
-                                : 'text-slate-400 hover:text-white hover:border-slate-600'
+                                    ? 'opacity-50 cursor-not-allowed text-slate-500'
+                                    : 'text-slate-400 hover:text-white hover:border-slate-600'
                                 }`}
                         >
                             <ChevronRight size={20} />
