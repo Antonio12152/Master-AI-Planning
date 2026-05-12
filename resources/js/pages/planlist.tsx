@@ -289,7 +289,7 @@ export default function MainPlanPage(): JSX.Element {
                             >
                                 <div className="flex items-start justify-between mb-4">
                                     <Link
-                                        href={""}
+                                        href={`/plans/${plan.id}`}
                                         className="flex items-start gap-4 flex-1 cursor-pointer"
                                     >
                                         {/* Icon */}

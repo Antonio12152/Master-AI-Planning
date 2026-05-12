@@ -8,7 +8,8 @@ Route::inertia('/', 'homepage', [
 ])->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('/planlist', 'planlist');
+    Route::inertia('/plans', 'planlist')->name('plans');
+    Route::inertia('/plans/{id}', 'plan')->name('plans.show');
 });
 
 require __DIR__ . '/settings.php';

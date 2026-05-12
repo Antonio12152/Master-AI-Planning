@@ -24,9 +24,9 @@ export default function AppHeaderLayout(): JSX.Element {
                 {/* Logo - Link to home */}
                 <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition">
                     <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center font-bold text-sm">
-                        P
+                        M
                     </div>
-                    <span className="text-lg font-semibold tracking-tight hidden sm:inline">PlanFlow</span>
+                    <span className="text-lg font-semibold tracking-tight hidden sm:inline">Master AI Planning</span>
                 </Link>
 
                 {/* Desktop Navigation */}
@@ -49,7 +49,7 @@ export default function AppHeaderLayout(): JSX.Element {
                         <div className="flex items-center gap-4">
                             <span className="text-sm text-slate-400 hidden sm:inline">
                                 <Link
-                                    href="/planlist"
+                                    href="/plans"
                                     className="text-sm font-medium text-slate-400 hover:text-white transition"
                                 >
                                     {user.name}
