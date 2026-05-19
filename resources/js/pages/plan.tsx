@@ -82,21 +82,23 @@ export default function PlanDetailPage(): JSX.Element {
     const [ideaGroups, setIdeaGroups] = useState<IdeaGroup[]>(MOCK_PLAN_DETAIL.ideaGroups);
     const [showAddIdeaModal, setShowAddIdeaModal] = useState(false);
     const [showStatusModal, setShowStatusModal] = useState(false);
-    const [showChatModal, setShowChatModal] = useState(false);
+    const [showAIChatModal, setShowAIChatModal] = useState(false);
     const [selectedGroupForIdea, setSelectedGroupForIdea] = useState<IdeaGroup | null>(null);
     const [activeId, setActiveId] = useState<string | number | null>(null);
 
     // Configure sensors for dnd-kit (touch + mouse + keyboard)
+    // Оптимизировано для мобильных и desktop устройств
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
-                distance: 8,
+                distance: 8, // Для мыши - оригинальное значение
+                delay: 100, // Добавлена задержка для мыши
             },
         }),
         useSensor(TouchSensor, {
             activationConstraint: {
-                delay: 250,
-                tolerance: 5,
+                delay: 100, // Уменьшено с 200 до 100 - быстрая реакция на мобиле
+                tolerance: 50, // УВЕЛИЧЕНО с 15 до 50 - большой допуск для пальца!
             },
         }),
         useSensor(KeyboardSensor, {
@@ -284,7 +286,7 @@ export default function PlanDetailPage(): JSX.Element {
 
                         <div className="flex flex-col items-end gap-3 flex-shrink-0 ml-4">
                             <button
-                                onClick={() => setShowChatModal(true)}
+                                onClick={() => setShowAIChatModal(true)}
                                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-500/20 border border-purple-500/30 text-xs font-medium text-purple-300 hover:text-purple-100 hover:bg-purple-500/30 hover:border-purple-500/50 transition"
                             >
                                 <MessageCircle size={16} />
@@ -335,9 +337,9 @@ export default function PlanDetailPage(): JSX.Element {
                     onDragEnd={handleDragEnd}
                 >
                     <SortableContext items={groupIds} strategy={horizontalListSortingStrategy}>
-                        <div className="flex gap-8 overflow-x-auto pb-4">
+                        <div className="flex gap-12 overflow-x-auto pb-6 px-2">
                             {ideaGroups.map((group) => (
-                                <div key={group.id} className="flex-shrink-0 w-80">
+                                <div key={group.id} className="flex-shrink-0 w-72 md:w-80 lg:w-96">
                                     <DraggableIdeaGroup
                                         group={group}
                                         onDeleteIdea={handleDeleteIdea}
@@ -386,10 +388,10 @@ export default function PlanDetailPage(): JSX.Element {
             />
 
             <ChatModal
-                isOpen={showChatModal}
+                isOpen={showAIChatModal}
                 plan={plan}
                 ideaGroups={ideaGroups}
-                onClose={() => setShowChatModal(false)}
+                onClose={() => setShowAIChatModal(false)}
             />
         </>
     );

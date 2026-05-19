@@ -1,13 +1,8 @@
 import React, { JSX } from 'react';
-import { GripVertical, Plus } from 'lucide-react';
-import {
-    useSortable,
-    SortableContext,
-    verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import DraggableIdeaItem from './DraggableIdeaItem';
-import type { IdeaGroup } from '@/types/ideas';
+import { Trash2, Plus } from 'lucide-react';
+import type { IdeaGroup, Idea } from '@/types/ideas';
 
 interface DraggableIdeaGroupProps {
     group: IdeaGroup;
@@ -27,74 +22,158 @@ export default function DraggableIdeaGroup({
         transform,
         transition,
         isDragging,
-    } = useSortable({
-        id: `group-${group.id}`,
-        data: {
-            type: 'IdeaGroup',
-            group,
-        },
-    });
+    } = useSortable({ id: `group-${group.id}`, data: { type: 'IdeaGroup', group } });
 
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
+        opacity: isDragging ? 0.5 : 1,
     };
-
-    const ideaIds = group.ideas.map((idea) => `idea-${idea.id}`);
 
     return (
         <div
             ref={setNodeRef}
             style={style}
-            className={`border rounded-xl bg-slate-800/30 backdrop-blur-sm overflow-hidden transition ${isDragging ? 'opacity-50 border-blue-500 shadow-lg shadow-blue-500/20' : 'border-slate-700/50'
+            className={`flex flex-col h-full rounded-lg border-2 transition ${isDragging
+                ? 'border-purple-500 bg-slate-800/80 shadow-2xl scale-105'
+                : 'border-slate-600 bg-slate-800/50 hover:border-slate-500'
                 }`}
         >
-            {/* Group Header */}
+            {/* Group Header - СЕНСОРНАЯ ЗОНА */}
             <div
-                className="p-6 border-b border-slate-700/30 bg-gradient-to-r from-slate-700/20 to-transparent flex items-center justify-between hover:bg-slate-700/30 transition cursor-grab active:cursor-grabbing"
                 {...attributes}
                 {...listeners}
+                className="flex items-center justify-between p-3 md:p-4 border-b border-slate-700 cursor-grab active:cursor-grabbing touch-none select-none bg-gradient-to-r from-slate-700 to-slate-800 rounded-t-md"
+                style={{
+                    WebkitTouchCallout: 'none',
+                    WebkitUserSelect: 'none',
+                    userSelect: 'none',
+                }}
             >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <GripVertical size={20} className="text-slate-500 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                        <h2 className="text-2xl font-semibold truncate">{group.name}</h2>
-                        <p className="text-sm text-slate-400">{group.ideas.length} idea{group.ideas.length !== 1 ? 's' : ''}</p>
-                    </div>
-                </div>
+                <h3 className="text-sm md:text-base font-semibold text-white truncate pr-2">
+                    {group.name}
+                </h3>
+                <span className="text-xs md:text-sm font-medium px-2 py-1 rounded-full bg-slate-700/50 text-slate-300 flex-shrink-0">
+                    {group.ideas.length}
+                </span>
             </div>
 
-            {/* Ideas Drop Zone */}
-            <div className="p-6">
-                {group.ideas.length > 0 ? (
-                    <SortableContext items={ideaIds} strategy={verticalListSortingStrategy}>
-                        <div className="space-y-3 mb-6">
-                            {group.ideas.map((idea) => (
-                                <DraggableIdeaItem
-                                    key={idea.id}
-                                    idea={idea}
-                                    groupId={group.id}
-                                    onDelete={onDeleteIdea}
-                                />
-                            ))}
-                        </div>
-                    </SortableContext>
-                ) : (
-                    <div className="py-8 text-center">
-                        <p className="text-sm text-slate-500 italic mb-4">No ideas yet</p>
-                        <p className="text-xs text-slate-600">Drag ideas here or add a new one</p>
+            {/* Ideas List - АДАПТИВНОЕ МАСШТАБИРОВАНИЕ */}
+            <div className="flex-1 overflow-y-auto p-2 md:p-3 space-y-2 md:space-y-3 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent">
+                {group.ideas.length === 0 ? (
+                    <div className="flex items-center justify-center h-24 text-slate-500 text-xs md:text-sm text-center px-2">
+                        No ideas yet. Add one to get started! ✨
                     </div>
+                ) : (
+                    group.ideas.map((idea) => (
+                        <IdeaItem
+                            key={idea.id}
+                            idea={idea}
+                            groupId={group.id}
+                            onDelete={onDeleteIdea}
+                        />
+                    ))
                 )}
+            </div>
 
-                {/* Add Idea Button */}
+            {/* Add Button */}
+            <button
+                onClick={() => onAddIdea(group)}
+                className="flex items-center justify-center gap-2 p-2 md:p-3 border-t border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700/50 transition font-medium text-xs md:text-sm rounded-b-md"
+            >
+                <Plus size={16} className="md:hidden" />
+                <Plus size={18} className="hidden md:block" />
+                <span className="hidden sm:inline">Add Idea</span>
+                <span className="sm:hidden">Add</span>
+            </button>
+        </div>
+    );
+}
+
+/**
+ * Компонент для отдельной идеи - МОБИЛЬНО-ОПТИМИЗИРОВАН
+ */
+function IdeaItem({
+    idea,
+    groupId,
+    onDelete,
+}: {
+    idea: Idea;
+    groupId: number;
+    onDelete: (groupId: number, ideaId: number) => void;
+}): JSX.Element {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({
+        id: `idea-${idea.id}`,
+        data: { type: 'Idea', idea, fromGroupId: groupId },
+    });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            {...attributes}
+            {...listeners}
+            className={`p-2 md:p-3 rounded-lg border-2 transition cursor-grab active:cursor-grabbing group touch-none ${isDragging
+                ? 'border-purple-500 bg-purple-500/20 shadow-lg scale-105'
+                : 'border-slate-600 bg-slate-700/30 hover:border-slate-500 hover:bg-slate-700/50'
+                }`}
+            style={{
+                ...style,
+                WebkitTouchCallout: 'none',
+                WebkitUserSelect: 'none',
+                userSelect: 'none',
+            }}
+        >
+            {/* Text с оптимизацией для мобилей */}
+            <p className="text-xs md:text-sm text-slate-100 mb-2 line-clamp-3 break-words">
+                {idea.text}
+            </p>
+
+            {/* Footer с датой и кнопкой удаления */}
+            <div className="flex items-center justify-between gap-2">
+                <span className="text-xs text-slate-500 flex-shrink-0">
+                    {formatDateShort(idea.createdAt)}
+                </span>
                 <button
-                    onClick={() => onAddIdea(group)}
-                    className="w-full py-2 px-4 rounded-lg border border-slate-600/50 text-slate-300 hover:text-white hover:bg-slate-700/50 transition text-sm font-medium flex items-center justify-center gap-2"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(groupId, idea.id);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 md:opacity-100 p-1 rounded text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition flex-shrink-0"
+                    title="Delete idea"
                 >
-                    <Plus size={18} />
-                    Add Idea
+                    <Trash2 size={14} className="md:w-4 md:h-4" />
                 </button>
             </div>
         </div>
     );
+}
+
+/**
+ * Форматирование даты (короткий формат для мобилей)
+ */
+function formatDateShort(dateString: string): string {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'today';
+    if (diffDays === 1) return 'yesterday';
+    if (diffDays < 7) return `${diffDays}d ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)}m ago`;
+    return `${Math.floor(diffDays / 365)}y ago`;
 }
