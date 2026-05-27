@@ -14,7 +14,7 @@ return new class extends Migration
             $table->foreignId('plan_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
 
-            $table->string('role')->default('viewer')->index(); // viewer, editor, admin
+            $table->string('role')->default('viewer')->index();
 
             $table->timestamp('joined_at')->useCurrent();
 
@@ -22,7 +22,6 @@ return new class extends Migration
 
             $table->index('plan_id');
             $table->index('user_id');
-            $table->index('role');
         });
     }
 

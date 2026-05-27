@@ -18,7 +18,6 @@ class Idea extends Model
         'priority',
         'tags',
         'sort_order',
-        'likes_count',
         'completed_at',
     ];
 

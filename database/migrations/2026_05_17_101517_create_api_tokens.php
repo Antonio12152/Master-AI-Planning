@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('token_hash')->unique();
             $table->string('name')->nullable();
 
-            $table->json('scopes')->default('[]'); // ["plans:read", "ideas:write"]
+            $table->json('scopes')->default('[]');
 
             $table->timestamps();
             $table->timestamp('expires_at')->nullable();

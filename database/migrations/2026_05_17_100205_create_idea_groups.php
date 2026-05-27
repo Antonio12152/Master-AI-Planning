@@ -17,15 +17,13 @@ return new class extends Migration
             $table->text('description')->nullable();
 
             $table->integer('sort_order')->default(0);
-
             $table->integer('idea_count')->default(0);
+
             $table->string('color')->nullable();
 
             $table->timestamps();
 
             $table->index('plan_id');
-            $table->index(['plan_id', 'sort_order']);
-            $table->index('created_at');
         });
     }
 

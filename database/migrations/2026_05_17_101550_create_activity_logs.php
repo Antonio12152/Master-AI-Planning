@@ -14,18 +14,17 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('plan_id')->nullable()->constrained()->onDelete('set null');
             
-            $table->string('action')->index(); // created_plan, added_idea, moved_idea, etc
-            $table->string('entity_type'); // plan, group, idea
+            $table->string('action')->index();
+            $table->string('entity_type');
             $table->unsignedBigInteger('entity_id')->nullable();
             
-            $table->json('details')->default('{}'); 
-            $table->json('changes')->default('{}'); // {from: "old_name", to: "new_name"}
+            $table->json('details')->default('{}');
+            $table->json('changes')->default('{}');
             
             $table->timestamp('created_at')->useCurrent();
             
             $table->index('user_id');
             $table->index('plan_id');
-            $table->index('action');
             $table->index('created_at');
         });
     }

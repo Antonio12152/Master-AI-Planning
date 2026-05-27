@@ -25,7 +25,6 @@ class IdeaFactory extends Factory
             'priority' => fake()->randomElement([0, 1, 2, 3]),
             'tags' => fake()->randomElements($tagsList, fake()->numberBetween(0, 3)),
             'sort_order' => fake()->numberBetween(0, 100),
-            'likes_count' => fake()->numberBetween(0, 50),
             'completed_at' => fake()->boolean(30) ? fake()->dateTime() : null,
         ];
     }
@@ -38,7 +37,7 @@ class IdeaFactory extends Factory
         ]);
     }
 
-    public function new(): static
+    public function asNew(): static
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'new',
