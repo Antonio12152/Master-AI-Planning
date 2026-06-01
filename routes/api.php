@@ -2,8 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\PlanController;
-use App\Http\Controllers\Api\IdeaController;
+use App\Http\Controllers\PlanController;
+use App\Http\Controllers\IdeaController;
 
 Route::middleware('auth:sanctum')->group(function () {
     // User endpoint

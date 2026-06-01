@@ -17,16 +17,11 @@ class IdeaController extends Controller
     {
     }
 
-    /**
-     * GET /api/plans/{plan}/ideas
-     * Получить идеи плана с фильтрацией
-     */
     public function indexByPlan(Request $request, Plan $plan): JsonResponse
     {
-        // Проверить доступ
         if (!$plan->canView($request->user())) {
             return response()->json([
-                'message' => 'Нет доступа к этому плану'
+                'message' => 'No access to this plan'
             ], 403);
         }
 
@@ -47,16 +42,11 @@ class IdeaController extends Controller
         ]);
     }
 
-    /**
-     * GET /api/groups/{group}/ideas
-     * Получить идеи группы
-     */
     public function indexByGroup(Request $request, IdeaGroup $group): JsonResponse
     {
-        // Проверить доступ к плану
         if (!$group->plan->canView($request->user())) {
             return response()->json([
-                'message' => 'Нет доступа'
+                'message' => 'No access'
             ], 403);
         }
 
@@ -71,10 +61,6 @@ class IdeaController extends Controller
         return response()->json($ideas);
     }
 
-    /**
-     * POST /api/groups/{group}/ideas
-     * Создать новую идею
-     */
     public function store(StoreIdeaRequest $request, IdeaGroup $group): JsonResponse
     {
         $idea = $this->ideaService->createIdea(
@@ -89,16 +75,11 @@ class IdeaController extends Controller
         );
     }
 
-    /**
-     * GET /api/ideas/{idea}
-     * Получить детали идеи
-     */
     public function show(Request $request, Idea $idea): JsonResponse
     {
-        // Проверить доступ к плану
         if (!$idea->plan->canView($request->user())) {
             return response()->json([
-                'message' => 'Нет доступа'
+                'message' => 'No access'
             ], 403);
         }
 
@@ -107,16 +88,11 @@ class IdeaController extends Controller
         );
     }
 
-    /**
-     * PUT /api/ideas/{idea}
-     * Обновить идею
-     */
     public function update(StoreIdeaRequest $request, Idea $idea): JsonResponse
     {
-        // Проверить доступ
         if (!$idea->plan->canEdit($request->user())) {
             return response()->json([
-                'message' => 'Нет прав на редактирование'
+                'message' => 'No rights to edit'
             ], 403);
         }
 
@@ -129,37 +105,26 @@ class IdeaController extends Controller
         return response()->json($idea);
     }
 
-    /**
-     * DELETE /api/ideas/{idea}
-     * Удалить идею
-     */
     public function destroy(Request $request, Idea $idea): JsonResponse
     {
-        // Проверить доступ
         if (!$idea->plan->canEdit($request->user())) {
             return response()->json([
-                'message' => 'Нет прав на удаление'
+                'message' => 'No rights to delete'
             ], 403);
         }
 
         $this->ideaService->deleteIdea($idea, $request->user());
 
         return response()->json([
-            'message' => 'Идея удалена'
+            'message' => 'Idea deleted'
         ]);
     }
 
-
-    /**
-     * PUT /api/ideas/{idea}/move
-     * Переместить идею в другую группу
-     */
     public function move(Request $request, Idea $idea): JsonResponse
     {
-        // Проверить доступ
         if (!$idea->plan->canEdit($request->user())) {
             return response()->json([
-                'message' => 'Нет прав на перемещение'
+                'message' => 'No rights to move'
             ], 403);
         }
 
@@ -169,10 +134,9 @@ class IdeaController extends Controller
 
         $newGroup = IdeaGroup::findOrFail($request->get('group_id'));
 
-        // Убедиться, что группа в том же плане
         if ($newGroup->plan_id !== $idea->plan_id) {
             return response()->json([
-                'message' => 'Группа должна быть в том же плане'
+                'message' => 'Group must be in the same plan'
             ], 400);
         }
 
@@ -181,16 +145,11 @@ class IdeaController extends Controller
         return response()->json($idea);
     }
 
-    /**
-     * POST /api/ideas/{idea}/complete
-     * Завершить идею
-     */
     public function complete(Request $request, Idea $idea): JsonResponse
     {
-        // Проверить доступ
         if (!$idea->plan->canEdit($request->user())) {
             return response()->json([
-                'message' => 'Нет прав'
+                'message' => 'No rights'
             ], 403);
         }
 
@@ -199,16 +158,11 @@ class IdeaController extends Controller
         return response()->json($idea);
     }
 
-    /**
-     * POST /api/ideas/{idea}/reject
-     * Отклонить идею
-     */
     public function reject(Request $request, Idea $idea): JsonResponse
     {
-        // Проверить доступ
         if (!$idea->plan->canEdit($request->user())) {
             return response()->json([
-                'message' => 'Нет прав'
+                'message' => 'No rights'
             ], 403);
         }
 
@@ -217,10 +171,6 @@ class IdeaController extends Controller
         return response()->json($idea);
     }
 
-    /**
-     * GET /api/my-ideas
-     * Получить все идеи пользователя (из его доступных планов)
-     */
     public function myIdeas(Request $request): JsonResponse
     {
         $ideas = $this->ideaService->getUserIdeas(

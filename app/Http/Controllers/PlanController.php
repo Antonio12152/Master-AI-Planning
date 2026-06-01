@@ -18,10 +18,6 @@ class PlanController extends Controller
     {
     }
 
-    /**
-     * GET /api/plans
-     * Получить все доступные планы пользователя
-     */
     public function index(Request $request): JsonResponse
     {
         $plans = $this->planService->getUserAccessiblePlans(
@@ -32,10 +28,6 @@ class PlanController extends Controller
         return response()->json($plans);
     }
 
-    /**
-     * POST /api/plans
-     * Создать новый план
-     */
     public function store(StorePlanRequest $request): JsonResponse
     {
         $plan = $this->planService->createPlan(
@@ -49,16 +41,11 @@ class PlanController extends Controller
         );
     }
 
-    /**
-     * GET /api/plans/{plan}
-     * Получить детали плана
-     */
     public function show(Request $request, Plan $plan): JsonResponse
     {
-        // Middleware проверит доступ, но можно и здесь
         if (!$plan->canView($request->user())) {
             return response()->json([
-                'message' => 'Нет доступа к этому плану'
+                'message' => 'No access to this plan'
             ], 403);
         }
 
@@ -72,10 +59,6 @@ class PlanController extends Controller
         ]);
     }
 
-    /**
-     * PUT /api/plans/{plan}
-     * Обновить план
-     */
     public function update(UpdatePlanRequest $request, Plan $plan): JsonResponse
     {
         $plan = $this->planService->updatePlan(
@@ -87,30 +70,21 @@ class PlanController extends Controller
         return response()->json($plan);
     }
 
-    /**
-     * DELETE /api/plans/{plan}
-     * Удалить план (только владелец)
-     */
     public function destroy(Request $request, Plan $plan): JsonResponse
     {
-        // Только владелец может удалить
         if ($plan->user_id !== $request->user()->id) {
             return response()->json([
-                'message' => 'Только владелец может удалить план'
+                'message' => 'Only the owner can delete the plan'
             ], 403);
         }
 
         $this->planService->deletePlan($plan, $request->user());
 
         return response()->json([
-            'message' => 'План удален'
+            'message' => 'Plan deleted'
         ], 200);
     }
 
-    /**
-     * GET /api/plans/my/created
-     * Получить планы, созданные пользователем
-     */
     public function myCreated(Request $request): JsonResponse
     {
         $plans = $this->planService->getUserCreatedPlans(
@@ -121,10 +95,6 @@ class PlanController extends Controller
         return response()->json($plans);
     }
 
-    /**
-     * GET /api/plans/my/shared
-     * Получить планы, к которым добавлен пользователь
-     */
     public function myShared(Request $request): JsonResponse
     {
         $plans = $this->planService->getUserSharedPlans(
@@ -135,10 +105,6 @@ class PlanController extends Controller
         return response()->json($plans);
     }
 
-    /**
-     * POST /api/plans/{plan}/members
-     * Добавить члена в план
-     */
     public function addMember(AddPlanMemberRequest $request, Plan $plan): JsonResponse
     {
         $member = $this->planService->addMember(
@@ -153,16 +119,11 @@ class PlanController extends Controller
         );
     }
 
-    /**
-     * PUT /api/plans/{plan}/members/{user}
-     * Обновить роль члена
-     */
     public function updateMember(Request $request, Plan $plan, User $user): JsonResponse
     {
-        // Проверить права
         if (!$plan->canManageMembers($request->user())) {
             return response()->json([
-                'message' => 'Нет прав на управление членами'
+                'message' => 'No rights to manage members'
             ], 403);
         }
 
@@ -179,20 +140,14 @@ class PlanController extends Controller
         return response()->json($member->load('user'));
     }
 
-    /**
-     * DELETE /api/plans/{plan}/members/{user}
-     * Удалить члена из плана
-     */
     public function removeMember(Request $request, Plan $plan, User $user): JsonResponse
     {
-        // Проверить права
         if (!$plan->canManageMembers($request->user())) {
             return response()->json([
-                'message' => 'Нет прав на управление членами'
+                'message' => 'No rights to manage members'
             ], 403);
         }
 
-        // Не может удалить себя, если он единственный админ
         if ($user->id === $request->user()->id) {
             $adminCount = $plan->members()
                 ->where('role', 'admin')
@@ -200,7 +155,7 @@ class PlanController extends Controller
 
             if ($adminCount === 1) {
                 return response()->json([
-                    'message' => 'Не можете удалить себя, если вы единственный админ'
+                    'message' => 'You cannot remove yourself if you are the only admin'
                 ], 400);
             }
         }
@@ -208,19 +163,15 @@ class PlanController extends Controller
         $this->planService->removeMember($plan, $user->id);
 
         return response()->json([
-            'message' => 'Член удален из плана'
+            'message' => 'Member removed from plan'
         ]);
     }
 
-    /**
-     * POST /api/plans/{plan}/archive
-     * Архивировать план
-     */
     public function archive(Request $request, Plan $plan): JsonResponse
     {
         if (!$plan->canEdit($request->user())) {
             return response()->json([
-                'message' => 'Нет прав на архивирование'
+                'message' => 'No rights to archive'
             ], 403);
         }
 
@@ -229,15 +180,11 @@ class PlanController extends Controller
         return response()->json($plan);
     }
 
-    /**
-     * POST /api/plans/{plan}/unarchive
-     * Восстановить план из архива
-     */
     public function unarchive(Request $request, Plan $plan): JsonResponse
     {
         if (!$plan->canEdit($request->user())) {
             return response()->json([
-                'message' => 'Нет прав на восстановление'
+                'message' => 'No rights to unarchive'
             ], 403);
         }
 

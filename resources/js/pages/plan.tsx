@@ -1,4 +1,4 @@
-import React, { JSX, useState } from 'react';
+import React, { JSX, useState, useEffect } from 'react';
 import { ChevronLeft, Lightbulb, Calendar, User, MessageCircle } from 'lucide-react';
 import { Link, usePage } from '@inertiajs/react';
 import {
@@ -21,6 +21,14 @@ import {
 import DraggableIdeaGroup from '@/components/dnd/DraggableIdeaGroup';
 import { AddIdeaModal, ChangeStatusModal } from '@/components/modals';
 import ChatModal from '@/components/modals/ChatModal';
+import {
+    getPlanDetails,
+    fetchPlanIdeas,
+    createIdea,
+    updateIdea,
+    deleteIdea,
+    updatePlan,
+} from '@/lib/api';
 import type { PlanDetail, IdeaGroup } from '@/types/ideas';
 
 // Types for drag data
@@ -37,68 +45,92 @@ interface DragDataGroup {
 
 type DragData = DragDataIdea | DragDataGroup;
 
-// Mock data
-const MOCK_PLAN_DETAIL: PlanDetail = {
-    id: 1,
-    name: 'Mobile App Redesign',
-    description: 'Complete redesign of the mobile application with focus on user experience',
-    status: 'active',
-    createdAt: '2024-01-15',
-    updatedAt: '2024-01-20',
-    ideaGroups: [
-        {
-            id: 1,
-            name: 'UI/UX Improvements',
-            ideas: [
-                { id: 1, text: 'Redesign navigation bar for better accessibility', createdAt: '2024-01-16', groupId: 1 },
-                { id: 2, text: 'Add dark mode support', createdAt: '2024-01-17', groupId: 1 },
-                { id: 3, text: 'Improve button sizing for mobile', createdAt: '2024-01-18', groupId: 1 },
-            ],
-        },
-        {
-            id: 2,
-            name: 'Performance',
-            ideas: [
-                { id: 4, text: 'Optimize image loading', createdAt: '2024-01-16', groupId: 2 },
-                { id: 5, text: 'Implement lazy loading', createdAt: '2024-01-17', groupId: 2 },
-            ],
-        },
-        {
-            id: 3,
-            name: 'Features',
-            ideas: [
-                { id: 6, text: 'Add offline mode', createdAt: '2024-01-19', groupId: 3 },
-                { id: 7, text: 'Implement push notifications', createdAt: '2024-01-19', groupId: 3 },
-                { id: 8, text: 'Add favorites/bookmarks', createdAt: '2024-01-20', groupId: 3 },
-                { id: 9, text: 'Social sharing integration', createdAt: '2024-01-20', groupId: 3 },
-            ],
-        },
-    ],
-};
-
-export default function PlanDetailPage(): JSX.Element {
+export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
     const { auth } = usePage().props;
-    const [plan, setPlan] = useState<PlanDetail>(MOCK_PLAN_DETAIL);
-    const [ideaGroups, setIdeaGroups] = useState<IdeaGroup[]>(MOCK_PLAN_DETAIL.ideaGroups);
+    const planId = parseInt(id, 10);
+
+    const [plan, setPlan] = useState<PlanDetail | null>(null);
+    const [ideaGroups, setIdeaGroups] = useState<IdeaGroup[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [showAddIdeaModal, setShowAddIdeaModal] = useState(false);
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [showAIChatModal, setShowAIChatModal] = useState(false);
     const [selectedGroupForIdea, setSelectedGroupForIdea] = useState<IdeaGroup | null>(null);
     const [activeId, setActiveId] = useState<string | number | null>(null);
 
+    // Load plan details and ideas on mount
+    useEffect(() => {
+        loadPlanData();
+    }, [planId]);
+
+    async function loadPlanData() {
+        try {
+            setLoading(true);
+            setError(null);
+
+            // Fetch plan details
+            const planData = await getPlanDetails(planId);
+            // Convert API response to PlanDetail type
+            const convertedPlan: PlanDetail = {
+                id: planData.id,
+                name: planData.name,
+                description: planData.description || '',
+                status: planData.status || 'active',
+                createdAt: planData.created_at,
+                updatedAt: planData.updated_at,
+                ideaGroups: [],
+            };
+            setPlan(convertedPlan);
+
+            // Fetch ideas for the plan
+            const ideasData = await fetchPlanIdeas(planId, undefined, 1000);
+            const ideas = ideasData.data || [];
+            
+            // Group ideas by group_id
+            const groupedIdeas: { [key: number]: any[] } = {};
+            ideas.forEach((idea: any) => {
+                const groupId = idea.group_id || 0;
+                if (!groupedIdeas[groupId]) {
+                    groupedIdeas[groupId] = [];
+                }
+                groupedIdeas[groupId].push({
+                    id: idea.id,
+                    text: idea.text,
+                    createdAt: idea.created_at,
+                    groupId: idea.group_id,
+                });
+            });
+            
+            // Convert to IdeaGroup array
+            const groups: IdeaGroup[] = Object.entries(groupedIdeas).map(([groupId, ideas], index) => ({
+                id: parseInt(groupId),
+                name: `Group ${groupId}`,
+                sort_order: index,
+                ideas: ideas as any[],
+            }));
+            
+            setIdeaGroups(groups);
+        } catch (err) {
+            setError('Failed to load plan details');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    }
+
     // Configure sensors for dnd-kit (touch + mouse + keyboard)
-    // Оптимизировано для мобильных и desktop устройств
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
-                distance: 8, // Для мыши - оригинальное значение
-                delay: 100, // Добавлена задержка для мыши
+                distance: 8,
+                delay: 100,
             },
         }),
         useSensor(TouchSensor, {
             activationConstraint: {
-                delay: 100, // Уменьшено с 200 до 100 - быстрая реакция на мобиле
-                tolerance: 50, // УВЕЛИЧЕНО с 15 до 50 - большой допуск для пальца!
+                delay: 100,
+                tolerance: 50,
             },
         }),
         useSensor(KeyboardSensor, {
@@ -106,44 +138,63 @@ export default function PlanDetailPage(): JSX.Element {
         })
     );
 
-    const handleAddIdea = (groupId: number, ideaText: string) => {
-        setIdeaGroups(
-            ideaGroups.map((group) =>
-                group.id === groupId
-                    ? {
-                        ...group,
-                        ideas: [
-                            ...group.ideas,
-                            {
-                                id: Math.max(...group.ideas.map((i) => i.id), 0) + 1,
-                                text: ideaText,
-                                createdAt: new Date().toISOString().split('T')[0],
-                                groupId: groupId,
-                            },
-                        ],
-                    }
-                    : group
-            )
-        );
-        setShowAddIdeaModal(false);
+    const handleAddIdea = async (groupId: number, ideaText: string) => {
+        try {
+            const newIdea = await createIdea(groupId, {
+                text: ideaText,
+            });
+
+            setIdeaGroups(
+                ideaGroups.map((group) =>
+                    group.id === groupId
+                        ? {
+                              ...group,
+                              ideas: [...group.ideas, newIdea],
+                              idea_count: group.idea_count ? group.idea_count + 1 : 1,
+                          }
+                        : group
+                )
+            );
+            setShowAddIdeaModal(false);
+        } catch (err) {
+            setError('Failed to create idea');
+            console.error('Failed to create idea:', err);
+        }
     };
 
-    const handleDeleteIdea = (groupId: number, ideaId: number) => {
-        setIdeaGroups(
-            ideaGroups.map((group) =>
-                group.id === groupId
-                    ? {
-                        ...group,
-                        ideas: group.ideas.filter((idea) => idea.id !== ideaId),
-                    }
-                    : group
-            )
-        );
+    const handleDeleteIdea = async (groupId: number, ideaId: number) => {
+        try {
+            await deleteIdea(ideaId);
+            setIdeaGroups(
+                ideaGroups.map((group) =>
+                    group.id === groupId
+                        ? {
+                              ...group,
+                              ideas: group.ideas.filter((idea) => idea.id !== ideaId),
+                              idea_count: Math.max(0, (group.idea_count || 1) - 1),
+                          }
+                        : group
+                )
+            );
+        } catch (err) {
+            setError('Failed to delete idea');
+            console.error('Failed to delete idea:', err);
+        }
     };
 
-    const handleStatusChange = (newStatus: string) => {
-        setPlan({ ...plan, status: newStatus as 'active' | 'inactive' | 'archived' });
-        setShowStatusModal(false);
+    const handleStatusChange = async (newStatus: string) => {
+        if (plan) {
+            try {
+                const updatedPlan = await updatePlan(plan.id, {
+                    status: newStatus as 'active' | 'inactive' | 'archived',
+                });
+                setPlan(updatedPlan as unknown as PlanDetail);
+                setShowStatusModal(false);
+            } catch (err) {
+                setError('Failed to update status');
+                console.error('Failed to update status:', err);
+            }
+        }
     };
 
     const handleDragStart = (event: any) => {
@@ -153,7 +204,6 @@ export default function PlanDetailPage(): JSX.Element {
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
 
-        // Guard clauses
         if (!over) {
             setActiveId(null);
             return;
@@ -224,7 +274,9 @@ export default function PlanDetailPage(): JSX.Element {
 
         // Moving groups
         if (activeData.type === 'IdeaGroup' && overData.type === 'IdeaGroup') {
-            const oldIndex = ideaGroups.findIndex((g) => g.id === (activeData as DragDataGroup).group.id);
+            const oldIndex = ideaGroups.findIndex(
+                (g) => g.id === (activeData as DragDataGroup).group.id
+            );
             const newIndex = ideaGroups.findIndex((g) => g.id === (overData as DragDataGroup).group.id);
 
             if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
@@ -264,7 +316,34 @@ export default function PlanDetailPage(): JSX.Element {
     const totalIdeas = ideaGroups.reduce((sum, group) => sum + group.ideas.length, 0);
     const groupIds = ideaGroups.map((group) => `group-${group.id}`);
 
-    return (
+    if (!plan) {
+        if (loading) {
+            return (
+                <div className="flex items-center justify-center min-h-screen">
+                    <div className="text-center">
+                        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-700 border-t-blue-500 mb-4"></div>
+                        <p className="text-slate-400">Loading plan...</p>
+                    </div>
+                </div>
+            );
+        }
+
+        if (error) {
+            return (
+                <div className="mx-auto px-4 py-12 md:max-w-7xl">
+                    <div className="rounded-lg bg-red-500/20 border border-red-500/50 p-4 text-red-400">
+                        <p className="font-semibold mb-2">Error</p>
+                        <p className="text-sm">{error}</p>
+                    </div>
+                    <Link href="/plans" className="mt-4 text-blue-400 hover:text-blue-300">
+                        Back to Plans
+                    </Link>
+                </div>
+            );
+        }
+    }
+
+    return plan ? (
         <>
             <div className="mx-auto px-4 py-12 md:max-w-7xl">
                 {/* Back Button */}
@@ -276,11 +355,21 @@ export default function PlanDetailPage(): JSX.Element {
                     Back to Plans
                 </Link>
 
+                {/* Error Alert */}
+                {error && (
+                    <div className="mb-8 rounded-lg bg-red-500/20 border border-red-500/50 p-4 text-red-400">
+                        <p className="font-semibold mb-2">Error</p>
+                        <p className="text-sm">{error}</p>
+                    </div>
+                )}
+
                 {/* Header Section */}
                 <div className="mb-12">
                     <div className="flex items-start justify-between mb-6">
                         <div className="flex-1">
-                            <h1 className="text-4xl md:text-5xl font-bold mb-2 tracking-tight">{plan.name}</h1>
+                            <h1 className="text-4xl md:text-5xl font-bold mb-2 tracking-tight">
+                                {plan.name}
+                            </h1>
                             <p className="text-slate-400 text-lg max-w-2xl">{plan.description}</p>
                         </div>
 
@@ -326,7 +415,8 @@ export default function PlanDetailPage(): JSX.Element {
 
                 {/* Drag hint */}
                 <div className="mb-8 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 text-sm text-blue-300">
-                    💡 Tip: Drag ideas between groups or drag group headers to reorder them. Works on mobile too!
+                    💡 Tip: Drag ideas between groups or drag group headers to reorder them. Works on
+                    mobile too!
                 </div>
 
                 {/* Idea Groups with DndContext */}
@@ -374,15 +464,19 @@ export default function PlanDetailPage(): JSX.Element {
 
             <ChangeStatusModal
                 isOpen={showStatusModal}
-                plan={{
-                    id: plan.id,
-                    name: plan.name,
-                    description: plan.description,
-                    ideasCount: totalIdeas,
-                    status: plan.status,
-                    createdAt: plan.createdAt,
-                    updatedAt: plan.updatedAt,
-                }}
+                plan={
+                    plan
+                        ? {
+                              id: plan.id,
+                              name: plan.name,
+                              description: plan.description,
+                              ideasCount: totalIdeas,
+                              status: plan.status,
+                              createdAt: plan.createdAt,
+                              updatedAt: plan.updatedAt,
+                          }
+                        : null
+                }
                 onClose={() => setShowStatusModal(false)}
                 onSubmit={handleStatusChange}
             />
@@ -394,7 +488,7 @@ export default function PlanDetailPage(): JSX.Element {
                 onClose={() => setShowAIChatModal(false)}
             />
         </>
-    );
+    ) : <></>;
 }
 
 /**

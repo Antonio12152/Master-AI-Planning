@@ -56,6 +56,7 @@ export async function updatePlan(
         description?: string;
         color?: string;
         icon?: string;
+        status?: string;
     }
 ) {
     try {

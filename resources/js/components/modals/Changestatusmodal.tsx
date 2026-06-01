@@ -13,7 +13,7 @@ export default function ChangeStatusModal({
     isOpen,
     plan,
     onClose,
-    onSubmit
+    onSubmit,
 }: ChangeStatusModalProps): JSX.Element | null {
     if (!isOpen || !plan) return null;
 
@@ -33,11 +33,17 @@ export default function ChangeStatusModal({
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'active':
-                return plan.status === status ? 'bg-green-600/30 border-green-500 text-green-400' : 'border-slate-600/50 text-slate-300 hover:border-slate-500 hover:text-white';
+                return plan.status === status
+                    ? 'bg-green-600/30 border-green-500 text-green-400'
+                    : 'border-slate-600/50 text-slate-300 hover:border-slate-500 hover:text-white';
             case 'inactive':
-                return plan.status === status ? 'bg-slate-600/30 border-slate-500 text-slate-300' : 'border-slate-600/50 text-slate-300 hover:border-slate-500 hover:text-white';
+                return plan.status === status
+                    ? 'bg-slate-600/30 border-slate-500 text-slate-300'
+                    : 'border-slate-600/50 text-slate-300 hover:border-slate-500 hover:text-white';
             case 'archived':
-                return plan.status === status ? 'bg-orange-600/30 border-orange-500 text-orange-400' : 'border-slate-600/50 text-slate-300 hover:border-slate-500 hover:text-white';
+                return plan.status === status
+                    ? 'bg-orange-600/30 border-orange-500 text-orange-400'
+                    : 'border-slate-600/50 text-slate-300 hover:border-slate-500 hover:text-white';
             default:
                 return 'border-slate-600/50 text-slate-300';
         }
@@ -61,11 +67,15 @@ export default function ChangeStatusModal({
                 </p>
 
                 <div className="space-y-2 mb-6">
-                    {['active', 'inactive', 'archived'].map((status) => (
+                    {(['active', 'inactive', 'archived'] as const).map((status) => (
                         <button
                             key={status}
-                            onClick={() => onSubmit(status)}
-                            className={`w-full p-3 rounded-lg border text-left font-medium transition ${getStatusColor(status)}`}
+                            onClick={() => {
+                                onSubmit(status);
+                            }}
+                            className={`w-full p-3 rounded-lg border text-left font-medium transition ${getStatusColor(
+                                status
+                            )}`}
                         >
                             <span className="mr-2">{getStatusIcon(status)}</span>
                             {status.charAt(0).toUpperCase() + status.slice(1)}
