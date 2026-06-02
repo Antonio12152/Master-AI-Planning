@@ -2,8 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PlanController;
-use App\Http\Controllers\IdeaController;
+use App\Http\Controllers\Api\PlanController;
+use App\Http\Controllers\Api\IdeaController;
 
 Route::middleware('auth:sanctum')->group(function () {
     // User endpoint
@@ -22,6 +22,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Ideas endpoints - by group
     Route::get('/groups/{group}/ideas', [IdeaController::class, 'indexByGroup']);
     Route::post('/groups/{group}/ideas', [IdeaController::class, 'store']);
+    
+    // Idea Groups CRUD
+    Route::get('/plans/{plan}/groups', [IdeaController::class, 'indexGroups']);
+    Route::post('/plans/{plan}/groups', [IdeaController::class, 'storeGroup']);
+    Route::put('/groups/{group}', [IdeaController::class, 'updateGroup']);
+    Route::delete('/groups/{group}', [IdeaController::class, 'destroyGroup']);
 
     // Ideas CRUD
     Route::get('/ideas/{idea}', [IdeaController::class, 'show']);

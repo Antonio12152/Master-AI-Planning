@@ -164,3 +164,79 @@ export async function deleteIdea(ideaId: number) {
         throw error;
     }
 }
+
+/**
+ * Example: Move idea to another group
+ */
+export async function moveIdea(ideaId: number, groupId: number) {
+    try {
+        const response = await axiosInstance.post(`/ideas/${ideaId}/move`, {
+            group_id: groupId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Failed to move idea:', error);
+        throw error;
+    }
+}
+
+/**
+ * Example: Fetch idea groups for a plan
+ */
+export async function fetchIdeaGroups(planId: number) {
+    try {
+        const response = await axiosInstance.get(`/plans/${planId}/groups`);
+        return response.data;
+    } catch (error) {
+        console.error('Failed to fetch groups:', error);
+        throw error;
+    }
+}
+
+/**
+ * Example: Create new idea group
+ */
+export async function createIdeaGroup(planId: number, data: {
+    name: string;
+    description?: string;
+    color?: string;
+}) {
+    try {
+        const response = await axiosInstance.post(`/plans/${planId}/groups`, data);
+        return response.data;
+    } catch (error) {
+        console.error('Failed to create group:', error);
+        throw error;
+    }
+}
+
+/**
+ * Example: Update idea group
+ */
+export async function updateIdeaGroup(groupId: number, data: {
+    name?: string;
+    description?: string;
+    color?: string;
+    sort_order?: number;
+}) {
+    try {
+        const response = await axiosInstance.put(`/groups/${groupId}`, data);
+        return response.data;
+    } catch (error) {
+        console.error('Failed to update group:', error);
+        throw error;
+    }
+}
+
+/**
+ * Example: Delete idea group
+ */
+export async function deleteIdeaGroup(groupId: number) {
+    try {
+        await axiosInstance.delete(`/groups/${groupId}`);
+        return true;
+    } catch (error) {
+        console.error('Failed to delete group:', error);
+        throw error;
+    }
+}

@@ -6,6 +6,7 @@ import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import SettingsLayout from '@/layouts/SettingsLayout';
 import { edit } from '@/routes/profile';
 import { send } from '@/routes/verification';
 
@@ -22,14 +23,15 @@ export default function Profile({
         <>
             <Head title="Profile settings" />
 
-            <h1 className="sr-only">Profile settings</h1>
+            <SettingsLayout currentPage="profile">
+                <h1 className="sr-only">Profile settings</h1>
 
-            <div className="space-y-6">
-                <Heading
-                    variant="small"
-                    title="Profile information"
-                    description="Update your name and email address"
-                />
+                <div className="space-y-6">
+                    <Heading
+                        variant="small"
+                        title="Profile information"
+                        description="Update your name and email address"
+                    />
 
                 <Form
                     {...ProfileController.update.form()}
@@ -118,6 +120,8 @@ export default function Profile({
             </div>
 
             <DeleteUser />
+            </div>
+            </SettingsLayout>
         </>
     );
 }

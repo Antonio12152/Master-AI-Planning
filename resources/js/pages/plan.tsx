@@ -1,5 +1,5 @@
 import React, { JSX, useState, useEffect } from 'react';
-import { ChevronLeft, Lightbulb, Calendar, User, MessageCircle } from 'lucide-react';
+import { ChevronLeft, Lightbulb, Calendar, User, MessageCircle, Plus, Edit2, Trash2 } from 'lucide-react';
 import { Link, usePage } from '@inertiajs/react';
 import {
     DndContext,
@@ -19,7 +19,7 @@ import {
     horizontalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import DraggableIdeaGroup from '@/components/dnd/DraggableIdeaGroup';
-import { AddIdeaModal, ChangeStatusModal } from '@/components/modals';
+import { AddIdeaModal, ChangeStatusModal, IdeaGroupModal } from '@/components/modals';
 import ChatModal from '@/components/modals/ChatModal';
 import {
     getPlanDetails,
@@ -28,6 +28,10 @@ import {
     updateIdea,
     deleteIdea,
     updatePlan,
+    moveIdea,
+    createIdeaGroup,
+    updateIdeaGroup,
+    deleteIdeaGroup,
 } from '@/lib/api';
 import type { PlanDetail, IdeaGroup } from '@/types/ideas';
 
@@ -56,8 +60,12 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
     const [showAddIdeaModal, setShowAddIdeaModal] = useState(false);
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [showAIChatModal, setShowAIChatModal] = useState(false);
+    const [showGroupModal, setShowGroupModal] = useState(false);
+    const [groupModalMode, setGroupModalMode] = useState<'create' | 'edit'>('create');
     const [selectedGroupForIdea, setSelectedGroupForIdea] = useState<IdeaGroup | null>(null);
+    const [selectedGroupForManage, setSelectedGroupForManage] = useState<IdeaGroup | null>(null);
     const [activeId, setActiveId] = useState<string | number | null>(null);
+    const [savingGroupId, setSavingGroupId] = useState<number | null>(null);
 
     // Load plan details and ideas on mount
     useEffect(() => {
@@ -197,11 +205,73 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
         }
     };
 
+    const handleCreateGroup = async (data: { name: string; description?: string; color?: string }) => {
+        try {
+            setSavingGroupId(-1);
+            const newGroup = await createIdeaGroup(planId, data);
+            setIdeaGroups([...ideaGroups, { 
+                ...newGroup, 
+                ideas: [],
+                sort_order: ideaGroups.length,
+            }]);
+            setShowGroupModal(false);
+        } catch (err) {
+            setError('Failed to create group');
+            console.error('Failed to create group:', err);
+        } finally {
+            setSavingGroupId(null);
+        }
+    };
+
+    const handleUpdateGroup = async (data: { name: string; description?: string; color?: string }) => {
+        if (!selectedGroupForManage) return;
+        
+        try {
+            setSavingGroupId(selectedGroupForManage.id);
+            const updatedGroup = await updateIdeaGroup(selectedGroupForManage.id, data);
+            setIdeaGroups(
+                ideaGroups.map((g) => g.id === selectedGroupForManage.id ? updatedGroup : g)
+            );
+            setShowGroupModal(false);
+            setSelectedGroupForManage(null);
+        } catch (err) {
+            setError('Failed to update group');
+            console.error('Failed to update group:', err);
+        } finally {
+            setSavingGroupId(null);
+        }
+    };
+
+    const handleDeleteGroup = async (groupId: number) => {
+        if (!confirm('Delete this group and all its ideas? This cannot be undone.')) return;
+        
+        try {
+            setSavingGroupId(groupId);
+            await deleteIdeaGroup(groupId);
+            setIdeaGroups(ideaGroups.filter((g) => g.id !== groupId));
+        } catch (err) {
+            setError('Failed to delete group');
+            console.error('Failed to delete group:', err);
+        } finally {
+            setSavingGroupId(null);
+        }
+    };
+
+    const openGroupModal = (mode: 'create' | 'edit', group?: IdeaGroup) => {
+        setGroupModalMode(mode);
+        if (mode === 'edit' && group) {
+            setSelectedGroupForManage(group);
+        } else {
+            setSelectedGroupForManage(null);
+        }
+        setShowGroupModal(true);
+    };
+
     const handleDragStart = (event: any) => {
         setActiveId(event.active.id);
     };
 
-    const handleDragEnd = (event: DragEndEvent) => {
+    const handleDragEnd = async (event: DragEndEvent) => {
         const { active, over } = event;
 
         if (!over) {
@@ -224,7 +294,7 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
             const ideaId = (activeData as DragDataIdea).idea.id;
 
             if (activeGroupId === overGroupId) {
-                // Reorder within same group
+                // Reorder within same group - update UI optimistically
                 const groupIndex = ideaGroups.findIndex((g) => g.id === activeGroupId);
                 if (groupIndex === -1) {
                     setActiveId(null);
@@ -244,35 +314,49 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
                         newIndex
                     );
                     setIdeaGroups(updatedGroups);
+                    
+                    // No API call needed for reordering within group (sort_order not critical)
                 }
             } else {
-                // Move to different group
+                // Move to different group - call API to persist
                 const idea = ideaGroups
                     .find((g) => g.id === activeGroupId)
                     ?.ideas.find((i) => i.id === ideaId);
 
                 if (idea) {
-                    const updatedGroups = ideaGroups.map((group) => {
-                        if (group.id === activeGroupId) {
-                            return {
-                                ...group,
-                                ideas: group.ideas.filter((i) => i.id !== idea.id),
-                            };
-                        }
-                        if (group.id === overGroupId) {
-                            return {
-                                ...group,
-                                ideas: [...group.ideas, { ...idea, groupId: overGroupId }],
-                            };
-                        }
-                        return group;
-                    });
-                    setIdeaGroups(updatedGroups);
+                    try {
+                        // Persist to API first
+                        await moveIdea(ideaId, overGroupId);
+                        
+                        // Update UI after successful API call
+                        const updatedGroups = ideaGroups.map((group) => {
+                            if (group.id === activeGroupId) {
+                                return {
+                                    ...group,
+                                    ideas: group.ideas.filter((i) => i.id !== idea.id),
+                                    idea_count: Math.max(0, (group.idea_count || 1) - 1),
+                                };
+                            }
+                            if (group.id === overGroupId) {
+                                return {
+                                    ...group,
+                                    ideas: [...group.ideas, { ...idea, groupId: overGroupId }],
+                                    idea_count: (group.idea_count || 0) + 1,
+                                };
+                            }
+                            return group;
+                        });
+                        setIdeaGroups(updatedGroups);
+                    } catch (err) {
+                        setError('Failed to move idea');
+                        console.error('Failed to move idea:', err);
+                        // UI will revert on next data load or user can refresh
+                    }
                 }
             }
         }
 
-        // Moving groups
+        // Moving groups - reorder persisted separately if needed
         if (activeData.type === 'IdeaGroup' && overData.type === 'IdeaGroup') {
             const oldIndex = ideaGroups.findIndex(
                 (g) => g.id === (activeData as DragDataGroup).group.id
@@ -280,7 +364,11 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
             const newIndex = ideaGroups.findIndex((g) => g.id === (overData as DragDataGroup).group.id);
 
             if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-                setIdeaGroups(arrayMove(ideaGroups, oldIndex, newIndex));
+                const reorderedGroups = arrayMove(ideaGroups, oldIndex, newIndex);
+                setIdeaGroups(reorderedGroups);
+                
+                // TODO: Persist group order to backend if needed
+                // Could call an updateGroupOrder API endpoint
             }
         }
 
@@ -419,6 +507,17 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
                     mobile too!
                 </div>
 
+                {/* Create Group Button */}
+                <div className="mb-6">
+                    <button
+                        onClick={() => openGroupModal('create')}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium transition"
+                    >
+                        <Plus size={18} />
+                        Create Group
+                    </button>
+                </div>
+
                 {/* Idea Groups with DndContext */}
                 <DndContext
                     sensors={sensors}
@@ -430,6 +529,28 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
                         <div className="flex gap-12 overflow-x-auto pb-6 px-2">
                             {ideaGroups.map((group) => (
                                 <div key={group.id} className="flex-shrink-0 w-72 md:w-80 lg:w-96">
+                                    {/* Group Header with Management Buttons */}
+                                    <div className="flex items-center justify-between gap-2 mb-3">
+                                        <h3 className="text-lg font-semibold text-white truncate">{group.name}</h3>
+                                        <div className="flex gap-1 flex-shrink-0">
+                                            <button
+                                                onClick={() => openGroupModal('edit', group)}
+                                                disabled={savingGroupId === group.id}
+                                                className="p-1.5 rounded bg-slate-700/50 hover:bg-slate-700 text-slate-300 hover:text-white transition disabled:opacity-50"
+                                                title="Edit group"
+                                            >
+                                                <Edit2 size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteGroup(group.id)}
+                                                disabled={savingGroupId === group.id}
+                                                className="p-1.5 rounded bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-red-300 transition disabled:opacity-50"
+                                                title="Delete group"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
                                     <DraggableIdeaGroup
                                         group={group}
                                         onDeleteIdea={handleDeleteIdea}
@@ -486,6 +607,18 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
                 plan={plan}
                 ideaGroups={ideaGroups}
                 onClose={() => setShowAIChatModal(false)}
+            />
+
+            <IdeaGroupModal
+                isOpen={showGroupModal}
+                mode={groupModalMode}
+                groupData={selectedGroupForManage}
+                onClose={() => {
+                    setShowGroupModal(false);
+                    setSelectedGroupForManage(null);
+                }}
+                onSubmit={groupModalMode === 'create' ? handleCreateGroup : handleUpdateGroup}
+                isLoading={savingGroupId !== null}
             />
         </>
     ) : <></>;

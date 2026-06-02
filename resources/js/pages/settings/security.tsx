@@ -9,6 +9,7 @@ import TwoFactorRecoveryCodes from '@/components/two-factor-recovery-codes';
 import TwoFactorSetupModal from '@/components/two-factor-setup-modal';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import SettingsLayout from '@/layouts/SettingsLayout';
 import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
 import { edit } from '@/routes/security';
 import { disable, enable } from '@/routes/two-factor';
@@ -53,10 +54,11 @@ export default function Security({
         <>
             <Head title="Security settings" />
 
-            <h1 className="sr-only">Security settings</h1>
+            <SettingsLayout currentPage="security">
+                <h1 className="sr-only">Security settings</h1>
 
-            <div className="space-y-6">
-                <Heading
+                <div className="space-y-6">
+                    <Heading
                     variant="small"
                     title="Update password"
                     description="Ensure your account is using a long, random password to stay secure"
@@ -235,6 +237,8 @@ export default function Security({
                     />
                 </div>
             )}
+            </div>
+            </SettingsLayout>
         </>
     );
 }

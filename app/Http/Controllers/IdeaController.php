@@ -180,4 +180,95 @@ class IdeaController extends Controller
 
         return response()->json($ideas);
     }
+
+    /**
+     * GET /api/plans/{plan}/groups
+     * Get all idea groups for a plan
+     */
+    public function indexGroups(Request $request, Plan $plan): JsonResponse
+    {
+        if (!$plan->canView($request->user())) {
+            return response()->json([
+                'message' => 'No access'
+            ], 403);
+        }
+
+        $groups = $plan->ideaGroups()->with('ideas')->get();
+
+        return response()->json([
+            'data' => $groups,
+        ]);
+    }
+
+    /**
+     * POST /api/plans/{plan}/groups
+     * Create a new idea group
+     */
+    public function storeGroup(Request $request, Plan $plan): JsonResponse
+    {
+        if (!$plan->canEdit($request->user())) {
+            return response()->json([
+                'message' => 'No edit rights'
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|min:1|max:255',
+            'description' => 'nullable|string|max:1000',
+            'color' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
+        ]);
+
+        $group = $plan->ideaGroups()->create([
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'color' => $validated['color'] ?? null,
+            'sort_order' => $plan->ideaGroups()->max('sort_order') + 1 ?? 0,
+        ]);
+
+        return response()->json($group, 201);
+    }
+
+    /**
+     * PUT /api/groups/{group}
+     * Update an idea group
+     */
+    public function updateGroup(Request $request, IdeaGroup $group): JsonResponse
+    {
+        if (!$group->plan->canEdit($request->user())) {
+            return response()->json([
+                'message' => 'No edit rights'
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|min:1|max:255',
+            'description' => 'nullable|string|max:1000',
+            'color' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
+            'sort_order' => 'nullable|integer|min:0',
+        ]);
+
+        $group->update($validated);
+
+        return response()->json($group);
+    }
+
+    /**
+     * DELETE /api/groups/{group}
+     * Delete an idea group
+     */
+    public function destroyGroup(Request $request, IdeaGroup $group): JsonResponse
+    {
+        if (!$group->plan->canEdit($request->user())) {
+            return response()->json([
+                'message' => 'No delete rights'
+            ], 403);
+        }
+
+        // Optionally move ideas to another group or delete them
+        $group->delete();
+
+        return response()->json([
+            'message' => 'Group deleted',
+        ]);
+    }
 }
