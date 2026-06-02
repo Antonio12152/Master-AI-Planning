@@ -5,14 +5,22 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    {{-- Inline script to detect system dark mode preference and apply it immediately --}}
+    {{-- Inline script to detect theme preference and apply it immediately --}}
     <script>
         (function() {
-            const appearance = '{{ $appearance ?? "system" }}';
-
-            if (appearance === 'system') {
+            // Check localStorage first for user preference
+            const savedTheme = localStorage.getItem('theme');
+            
+            if (savedTheme) {
+                // User has a saved preference
+                if (savedTheme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } else {
+                // Fall back to system preference
                 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
                 if (prefersDark) {
                     document.documentElement.classList.add('dark');
                 }
@@ -20,14 +28,16 @@
         })();
     </script>
 
-    {{-- Inline style to set the HTML background color based on our theme in app.css --}}
+    {{-- Inline style to set the HTML background color based on our theme --}}
     <style>
         html {
-            background-color: oklch(1 0 0);
+            background-color: oklch(0.99 0.001 0);
+            color-scheme: light;
         }
 
         html.dark {
-            background-color: oklch(0.145 0 0);
+            background-color: oklch(0.13 0.001 0);
+            color-scheme: dark;
         }
     </style>
 

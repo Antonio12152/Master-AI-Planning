@@ -13,13 +13,13 @@ export default function HomePage(): JSX.Element {
                         <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent"> Build Plans</span>
                     </h1>
                     <p className="text-xl text-slate-400 max-w-2xl mb-8">
-                        PlanFlow helps you capture, organize, and transform your ideas into actionable plans with the power of AI.
+                        Master AI Planning helps you capture, organize, and transform your ideas into actionable plans with the power of AI.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4">
                         <button className="px-8 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition">
                             Get Started
                         </button>
-                        <button className="px-8 py-3 rounded-lg border border-slate-600 hover:border-slate-400 text-white font-medium transition flex items-center justify-center gap-2">
+                        <button className="px-8 py-3 rounded-lg border-2 border-blue-600 hover:border-blue-700 hover:bg-blue-50 text-blue-600 hover:text-blue-700 font-medium transition flex items-center justify-center gap-2">
                             Learn More <ArrowRight size={18} />
                         </button>
                     </div>
@@ -28,7 +28,7 @@ export default function HomePage(): JSX.Element {
 
             {/* Features Section */}
             <section className="mx-auto px-4 py-16 md:max-w-7xl">
-                <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Why Choose PlanFlow?</h2>
+                <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Why Choose Master AI Planning?</h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {/* Feature 1 */}
@@ -129,7 +129,7 @@ export default function HomePage(): JSX.Element {
                 <div className="relative rounded-2xl border border-slate-700/50 bg-gradient-to-r from-blue-600/10 to-cyan-600/10 backdrop-blur-sm p-12 md:p-16 text-center">
                     <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Get Started?</h2>
                     <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-8">
-                        Start organizing your ideas today and see how PlanFlow can help you turn thoughts into plans.
+                        Start organizing your ideas today and see how Master AI Planning can help you turn thoughts into plans.
                     </p>
                     <button className="px-8 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition">
                         Create Your First Plan
@@ -145,26 +145,26 @@ export default function HomePage(): JSX.Element {
                     {/* FAQ Item 1 */}
                     <details className="group p-6 rounded-lg border border-slate-700/50 bg-slate-800/30 cursor-pointer">
                         <summary className="flex items-center justify-between font-semibold">
-                            What is PlanFlow?
+                            What is Master AI Planning?
                             <span className="transition group-open:rotate-180">
                                 <ArrowRight size={20} className="text-slate-400" />
                             </span>
                         </summary>
                         <p className="text-slate-400 mt-4">
-                            PlanFlow is a platform that helps you organize ideas and turn them into actionable plans with AI assistance. It combines brainstorming, organization, and AI-powered planning in one place.
+                            Master AI Planning is a platform that helps you organize ideas and turn them into actionable plans with AI assistance. It combines brainstorming, organization, and AI-powered planning in one place.
                         </p>
                     </details>
 
                     {/* FAQ Item 2 */}
                     <details className="group p-6 rounded-lg border border-slate-700/50 bg-slate-800/30 cursor-pointer">
                         <summary className="flex items-center justify-between font-semibold">
-                            Can I use PlanFlow for team projects?
+                            Can I use Master AI Planning for team projects?
                             <span className="transition group-open:rotate-180">
                                 <ArrowRight size={20} className="text-slate-400" />
                             </span>
                         </summary>
                         <p className="text-slate-400 mt-4">
-                            Yes! PlanFlow supports collaboration features so you can work with your team members on shared plans and ideas.
+                            Yes! Master AI Planning supports collaboration features so you can work with your team members on shared plans and ideas.
                         </p>
                     </details>
 
