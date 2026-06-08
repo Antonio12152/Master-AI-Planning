@@ -148,9 +148,10 @@ class LogApiActivity
 
         // Для /api/groups/{group_id}/ideas/{id}
         if ($request->route('group_id')) {
-            // Нужно получить план через группу
-            $groupId = $request->route('group_id');
-            // Реализуйте логику получения плана из группы
+            $group = $request->route('group');
+            if ($group && isset($group->plan_id)) {
+                return $group->plan_id;
+            }
         }
 
         return null;
