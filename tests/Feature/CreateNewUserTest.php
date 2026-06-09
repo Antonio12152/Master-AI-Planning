@@ -15,7 +15,6 @@ describe('CreateNewUser Action', function () {
         expect(method_exists($action, 'passwordRules'))->toBeTrue();
         expect(method_exists($action, 'profileRules'))->toBeTrue();
     });
-
     test('validates that all required fields are present in input', function () {
         $requiredFields = ['name', 'email', 'password', 'password_confirmation'];
         

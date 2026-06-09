@@ -17,7 +17,6 @@ describe('Authentication', function () {
             'user@',
             'user @example.com',
         ];
-
         $emailRegex = '/^[^\s@]+@[^\s@]+\.[^\s@]+$/';
 
         foreach ($validEmails as $email) {

@@ -17,7 +17,6 @@ describe('PlanController - API Endpoints', function () {
 
             $response = $this->actingAs($this->user)
                 ->getJson('/api/plans');
-
             expect($response->status())->toBe(200);
             expect($response->json())->toHaveKey('data');
         });

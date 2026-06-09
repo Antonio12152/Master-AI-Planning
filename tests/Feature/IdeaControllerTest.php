@@ -219,7 +219,6 @@ describe('IdeaController', function () {
                 ->postJson("/api/ideas/{$idea->id}/move", [
                     'group_id' => $group2->id,
                 ]);
-
             expect($response->status())->toBe(200);
             expect(Idea::find($idea->id)->group_id)->toBe($group2->id);
         });

@@ -12,7 +12,6 @@ beforeEach(function () {
     ]);
     $this->otherUser = User::factory()->create(['email_verified_at' => now()]);
 });
-
 describe('ProfileController - API Endpoints', function () {
     describe('show()', function () {
         test('returns authenticated user profile', function () {

@@ -151,7 +151,6 @@ describe('SecurityController', function () {
             expect($response->status())->toBe(302);
             expect(User::find($this->user->id)->password)->toBe($originalPassword);
         });
-
         test('rejects empty password field', function () {
             $originalPassword = User::find($this->user->id)->password;
 

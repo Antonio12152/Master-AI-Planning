@@ -15,7 +15,6 @@ describe('Model Instances', function () {
         $plan = new Plan();
         expect($plan)->toBeInstanceOf(Plan::class);
     });
-
     test('can instantiate idea group model', function () {
         $group = new IdeaGroup();
         expect($group)->toBeInstanceOf(IdeaGroup::class);
