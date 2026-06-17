@@ -276,12 +276,12 @@ export default function MainPlanPage(): JSX.Element {
                                                     <div className="flex items-center gap-4 text-sm text-slate-500">
                                                         <div className="flex items-center gap-1">
                                                             <Lightbulb size={16} />
-                                                            {plan.ideasCount} idea
-                                                            {plan.ideasCount !== 1 ? 's' : ''}
+                                                            {plan.idea_count} idea
+                                                            {plan.idea_count !== 1 ? 's' : ''}
                                                         </div>
                                                         <div className="flex items-center gap-1">
                                                             <Clock size={16} />
-                                                            Updated {formatDate(plan.updatedAt)}
+                                                            Updated {formatDate(plan.updated_at)}
                                                         </div>
                                                     </div>
                                                 </div>

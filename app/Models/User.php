@@ -28,6 +28,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'timezone',
         'is_active',
         'is_verified',
+        'is_admin',
         'last_login_at',
     ];
 
@@ -49,6 +50,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed', // ✅ Laravel 11 автоматически хеширует
             'is_active' => 'boolean',
             'is_verified' => 'boolean',
+            'is_admin' => 'boolean',
             'last_login_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',

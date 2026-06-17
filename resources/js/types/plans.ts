@@ -5,9 +5,9 @@ export interface Plan {
     status: 'active' | 'inactive' | 'archived';
     color?: string;
     icon?: string;
-    ideasCount: number;
-    createdAt: string;
-    updatedAt: string;
+    created_at: string;
+    updated_at: string;
+    user_id: number;
     is_public?: boolean;
     idea_count?: number;
     group_count?: number;

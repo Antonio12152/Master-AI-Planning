@@ -144,7 +144,7 @@ function IdeaItem({
             {/* Footer с датой и кнопкой удаления */}
             <div className="flex items-center justify-between gap-2">
                 <span className="text-xs text-slate-500 flex-shrink-0">
-                    {formatDateShort(idea.createdAt)}
+                    {formatDateShort(idea.created_at)}
                 </span>
                 <button
                     onClick={(e) => {

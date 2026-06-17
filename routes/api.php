@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PlanController;
 use App\Http\Controllers\Api\IdeaController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\AdminController;
 
 // API routes with Sanctum token authentication
 Route::middleware([
@@ -47,4 +48,9 @@ Route::middleware([
     // Ideas actions
     Route::post('/ideas/{idea}/move', [IdeaController::class, 'move'])->name('ideas.move');
     Route::post('/ideas/{idea}/complete', [IdeaController::class, 'complete'])->name('ideas.complete');
+
+    // Admin endpoints
+    Route::get('/admin/users', [AdminController::class, 'indexUsers'])->name('admin.users.index');
+    Route::get('/admin/users/{user}', [AdminController::class, 'showUser'])->name('admin.users.show');
+    Route::put('/admin/users/{user}/status', [AdminController::class, 'updateUserStatus'])->name('admin.users.updateStatus');
 });

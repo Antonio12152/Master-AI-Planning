@@ -24,17 +24,22 @@ export default function Dashboard() {
                 id: p.id,
                 name: p.name,
                 description: p.description || '',
-                ideasCount: p.idea_count || 0,
+                idea_count: p.idea_count || 0,
                 status: p.status || 'active',
-                createdAt: p.created_at,
-                updatedAt: p.updated_at,
+                created_at: p.created_at,
+                updated_at: p.updated_at,
+                user_id: p.user_id,
+                is_public: p.is_public,
+                group_count: p.group_count,
+                member_count: p.member_count,
+                archived_at: p.archived_at,
             }));
 
             setPlans(convertedPlans.slice(0, 5)); // Recent 5 plans
             setStats({
                 totalPlans: convertedPlans.length,
                 activePlans: convertedPlans.filter((p: Plan) => p.status === 'active').length,
-                totalIdeas: convertedPlans.reduce((sum: number, p: Plan) => sum + p.ideasCount, 0),
+                totalIdeas: convertedPlans.reduce((sum: number, p: Plan) => sum + (p.idea_count || 0), 0),
             });
         } catch (error) {
             console.error('Failed to load dashboard data:', error);
@@ -126,7 +131,7 @@ export default function Dashboard() {
                                             <div className="text-right">
                                                 <p className="text-slate-300 text-sm flex items-center gap-1">
                                                     <Lightbulb size={16} />
-                                                    {plan.ideasCount} ideas
+                                                    {plan.idea_count} ideas
                                                 </p>
                                                 <p className={`text-xs mt-1 px-2 py-1 rounded-full ${
                                                     plan.status === 'active' ? 'bg-green-500/20 text-green-400' :

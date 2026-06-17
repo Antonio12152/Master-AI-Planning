@@ -105,7 +105,7 @@ export async function createIdea(
 ) {
     try {
         const response = await axiosInstance.post(
-            `/groups/${groupId}/ideas`,
+            `/idea-groups/${groupId}/ideas`,
             data
         );
         return response.data;
@@ -220,7 +220,7 @@ export async function updateIdeaGroup(groupId: number, data: {
     sort_order?: number;
 }) {
     try {
-        const response = await axiosInstance.put(`/groups/${groupId}`, data);
+        const response = await axiosInstance.put(`/idea-groups/${groupId}`, data);
         return response.data;
     } catch (error) {
         console.error('Failed to update group:', error);
@@ -233,10 +233,29 @@ export async function updateIdeaGroup(groupId: number, data: {
  */
 export async function deleteIdeaGroup(groupId: number) {
     try {
-        await axiosInstance.delete(`/groups/${groupId}`);
+        await axiosInstance.delete(`/idea-groups/${groupId}`);
         return true;
     } catch (error) {
         console.error('Failed to delete group:', error);
+        throw error;
+    }
+}
+
+/**
+ * Reorder idea groups by updating sort_order for each group
+ * based on their position in the provided array
+ */
+export async function reorderIdeaGroups(groups: Array<{ id: number; [key: string]: any }>) {
+    try {
+        // Update each group with its new sort_order based on array position
+        const updatePromises = groups.map((group, index) =>
+            updateIdeaGroup(group.id, { sort_order: index })
+        );
+        
+        const results = await Promise.all(updatePromises);
+        return results;
+    } catch (error) {
+        console.error('Failed to reorder groups:', error);
         throw error;
     }
 }

@@ -23,7 +23,6 @@ import { AddIdeaModal, ChangeStatusModal, IdeaGroupModal } from '@/components/mo
 import ChatModal from '@/components/modals/ChatModal';
 import {
     getPlanDetails,
-    fetchPlanIdeas,
     createIdea,
     updateIdea,
     deleteIdea,
@@ -32,6 +31,7 @@ import {
     createIdeaGroup,
     updateIdeaGroup,
     deleteIdeaGroup,
+    reorderIdeaGroups,
 } from '@/lib/api';
 import type { PlanDetail, IdeaGroup } from '@/types/ideas';
 
@@ -77,45 +77,54 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
             setLoading(true);
             setError(null);
 
-            // Fetch plan details
-            const planData = await getPlanDetails(planId);
-            // Convert API response to PlanDetail type
+            // Fetch plan details (includes nested ideaGroups and ideas)
+            const response = await getPlanDetails(planId);
+            const planData = response.plan;
+            
+            // Set plan with all data
             const convertedPlan: PlanDetail = {
                 id: planData.id,
                 name: planData.name,
                 description: planData.description || '',
                 status: planData.status || 'active',
-                createdAt: planData.created_at,
-                updatedAt: planData.updated_at,
-                ideaGroups: [],
+                color: planData.color,
+                icon: planData.icon,
+                created_at: planData.created_at,
+                updated_at: planData.updated_at,
+                ideaGroups: planData.ideaGroups || [],
+                idea_count: planData.idea_count,
+                group_count: planData.group_count,
+                member_count: planData.member_count,
+                is_public: planData.is_public,
+                archived_at: planData.archived_at,
+                user_id: planData.user_id,
             };
             setPlan(convertedPlan);
-
-            // Fetch ideas for the plan
-            const ideasData = await fetchPlanIdeas(planId, undefined, 1000);
-            const ideas = ideasData.data || [];
             
-            // Group ideas by group_id
-            const groupedIdeas: { [key: number]: any[] } = {};
-            ideas.forEach((idea: any) => {
-                const groupId = idea.group_id || 0;
-                if (!groupedIdeas[groupId]) {
-                    groupedIdeas[groupId] = [];
-                }
-                groupedIdeas[groupId].push({
+            // Use nested ideas from idea groups
+            const groups: IdeaGroup[] = (planData.ideaGroups || []).map((group: any) => ({
+                id: group.id,
+                name: group.name,
+                description: group.description,
+                sort_order: group.sort_order,
+                color: group.color,
+                ideas: (group.ideas || []).map((idea: any) => ({
                     id: idea.id,
                     text: idea.text,
-                    createdAt: idea.created_at,
-                    groupId: idea.group_id,
-                });
-            });
-            
-            // Convert to IdeaGroup array
-            const groups: IdeaGroup[] = Object.entries(groupedIdeas).map(([groupId, ideas], index) => ({
-                id: parseInt(groupId),
-                name: `Group ${groupId}`,
-                sort_order: index,
-                ideas: ideas as any[],
+                    description: idea.description,
+                    status: idea.status,
+                    priority: idea.priority,
+                    tags: idea.tags,
+                    created_at: idea.created_at,
+                    completed_at: idea.completed_at,
+                    group_id: idea.group_id,
+                    sort_order: idea.sort_order,
+                    plan_id: idea.plan_id,
+                })),
+                idea_count: group.idea_count || group.ideas?.length || 0,
+                created_at: group.created_at,
+                updated_at: group.updated_at,
+                plan_id: group.plan_id,
             }));
             
             setIdeaGroups(groups);
@@ -356,7 +365,7 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
             }
         }
 
-        // Moving groups - reorder persisted separately if needed
+        // Moving groups - reorder persisted to backend
         if (activeData.type === 'IdeaGroup' && overData.type === 'IdeaGroup') {
             const oldIndex = ideaGroups.findIndex(
                 (g) => g.id === (activeData as DragDataGroup).group.id
@@ -367,8 +376,15 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
                 const reorderedGroups = arrayMove(ideaGroups, oldIndex, newIndex);
                 setIdeaGroups(reorderedGroups);
                 
-                // TODO: Persist group order to backend if needed
-                // Could call an updateGroupOrder API endpoint
+                // Persist group order to backend
+                try {
+                    await reorderIdeaGroups(reorderedGroups);
+                } catch (err) {
+                    setError('Failed to save group order');
+                    console.error('Failed to reorder groups:', err);
+                    // Revert to original order on error
+                    loadPlanData();
+                }
             }
         }
 
@@ -492,7 +508,7 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
                         </div>
                         <div className="flex items-center gap-2">
                             <Calendar size={18} />
-                            Created {formatDate(plan.createdAt)}
+                            Created {formatDate(plan.created_at)}
                         </div>
                         <div className="flex items-center gap-2">
                             <User size={18} />
@@ -591,10 +607,12 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
                               id: plan.id,
                               name: plan.name,
                               description: plan.description,
-                              ideasCount: totalIdeas,
+                              idea_count: totalIdeas,
                               status: plan.status,
-                              createdAt: plan.createdAt,
-                              updatedAt: plan.updatedAt,
+                              created_at: plan.created_at,
+                              updated_at: plan.updated_at,
+                              user_id: plan.user_id,
+                              is_public: plan.is_public,
                           }
                         : null
                 }

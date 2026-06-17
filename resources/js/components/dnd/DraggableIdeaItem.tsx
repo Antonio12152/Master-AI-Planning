@@ -51,7 +51,7 @@ export default function DraggableIdeaItem({
                 />
                 <div className="flex-1 min-w-0">
                     <p className="text-slate-200 mb-2 break-words">{idea.text}</p>
-                    <p className="text-xs text-slate-500">{formatDate(idea.createdAt)}</p>
+                    <p className="text-xs text-slate-500">{formatDate(idea.created_at)}</p>
                 </div>
             </div>
             <button

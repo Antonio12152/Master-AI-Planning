@@ -55,7 +55,7 @@ export default function AppHeaderLayout(): JSX.Element {
                         // Logged in user
                         <div className="flex items-center gap-4">
                             <Link
-                                href="/plans"
+                                href="/profile"
                                 className="text-sm font-medium text-slate-300 hover:text-blue-400 transition duration-200 hidden sm:inline"
                             >
                                 {user.name}
@@ -106,7 +106,7 @@ export default function AppHeaderLayout(): JSX.Element {
                             {user ? (
                                 <>
                                     <Link
-                                        href="/plans"
+                                        href="/profile"
                                         className="block h-9 px-3 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700 transition duration-200 flex items-center"
                                     >
                                         {user.name}

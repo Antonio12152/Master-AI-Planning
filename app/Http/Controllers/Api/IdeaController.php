@@ -223,7 +223,7 @@ class IdeaController extends Controller
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
             'color' => $validated['color'] ?? null,
-            'sort_order' => $plan->ideaGroups()->max('sort_order') + 1 ?? 0,
+            'sort_order' => ($plan->ideaGroups()->max('sort_order') ?? -1) + 1,
         ]);
 
         return response()->json($group, 201);
@@ -265,7 +265,10 @@ class IdeaController extends Controller
             ], 403);
         }
 
-        // Optionally move ideas to another group or delete them
+        // Delete all ideas in this group first
+        $group->ideas()->delete();
+        
+        // Delete the group
         $group->delete();
 
         return response()->json([

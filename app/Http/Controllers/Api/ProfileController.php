@@ -8,9 +8,36 @@ use App\Http\Requests\Settings\ProfileUpdateRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ProfileController extends Controller
 {
+    /**
+     * Display the user's profile page (Inertia).
+     */
+    public function view(Request $request): Response
+    {
+        $user = $request->user();
+
+        return Inertia::render('profile', [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'avatar_url' => $user->avatar_url,
+                'bio' => $user->bio,
+                'timezone' => $user->timezone,
+                'is_active' => $user->is_active,
+                'is_verified' => $user->is_verified,
+                'email_verified_at' => $user->email_verified_at,
+                'last_login_at' => $user->last_login_at,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
+            ],
+        ]);
+    }
+
     /**
      * Get the authenticated user's profile information.
      */
