@@ -42,12 +42,13 @@ class ProfileController extends Controller
         $user = $request->user();
         $validated = $request->validated();
 
+        $user->fill($validated);
+
         // If email is being changed, reset verification
-        if ($user->email !== $validated['email']) {
-            $validated['email_verified_at'] = null;
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $user->fill($validated);
         $user->save();
 
         return response()->json([
@@ -73,16 +74,17 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        // Delete user from database
-        $user->delete();
-
-        // For API (Sanctum), token is automatically invalidated after user deletion
-        // For web sessions, invalidate the session if it exists
-        if ($request->hasSession()) {
-            Auth::logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
+        // Verify email is verified before allowing deletion
+        if (is_null($user->email_verified_at)) {
+            return response()->json(
+                ['message' => 'Email must be verified to delete account'],
+                403
+            );
         }
+
+        // Delete user from database
+        // Note: tokens are cascaded deleted via foreign key constraint
+        $user->delete();
 
         return response()->json([
             'message' => 'Account deleted successfully'

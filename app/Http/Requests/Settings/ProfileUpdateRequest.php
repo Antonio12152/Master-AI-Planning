@@ -20,9 +20,9 @@ class ProfileUpdateRequest extends FormRequest
     {
         $userId = $this->user()->id;
         
-        // Make all profile fields optional for updates
+        // Name is required, other fields optional
         return [
-            'name' => ['sometimes', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'email' => [
                 'sometimes',
                 'string',
