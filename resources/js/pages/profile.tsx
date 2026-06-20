@@ -21,6 +21,21 @@ interface UserProfile {
 export default function Profile(): JSX.Element {
     const { user } = usePage().props as { user: UserProfile };
 
+    // Debug: Check if user data exists
+    if (!user) {
+        return (
+            <>
+                <Head title="My Profile" />
+                <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+                    <div className="text-center text-white">
+                        <h1 className="text-2xl font-bold">Error loading profile</h1>
+                        <p className="text-slate-400">User data not available. Please try logging in again.</p>
+                    </div>
+                </div>
+            </>
+        );
+    }
+
     const formatDate = (dateString?: string | null) => {
         if (!dateString) return 'Not available';
         return new Date(dateString).toLocaleDateString('en-US', {

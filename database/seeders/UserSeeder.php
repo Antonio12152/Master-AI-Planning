@@ -15,7 +15,7 @@ class UserSeeder extends Seeder
             'name' => 'Admin User',
             'email' => 'admin@example.com',
             'email_verified_at' => now(),
-            'password' => Hash::make('password123'),
+            'password' => Hash::make(env('PASSWORD', 'password123')),
             'timezone' => 'Europe/Berlin',
             'is_active' => true,
             'is_verified' => true,

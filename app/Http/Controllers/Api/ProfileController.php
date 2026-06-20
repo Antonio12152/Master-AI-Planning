@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -35,6 +36,18 @@ class ProfileController extends Controller
                 'created_at' => $user->created_at,
                 'updated_at' => $user->updated_at,
             ],
+        ]);
+    }
+
+    /**
+     * Display the profile settings edit page (Inertia).
+     */
+    public function edit(Request $request): Response
+    {
+        return Inertia::render('settings/profile', [
+            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail &&
+                ! $request->user()->hasVerifiedEmail(),
+            'status' => session('status'),
         ]);
     }
 

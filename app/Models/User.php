@@ -220,6 +220,14 @@ class User extends Authenticatable implements MustVerifyEmail
         return $plan->getUserRole($this);
     }
 
+    /**
+     * Check if the user has enabled two-factor authentication.
+     */
+    public function hasEnabledTwoFactorAuthentication(): bool
+    {
+        return !is_null($this->two_factor_secret);
+    }
+
     // ============================================================
     // EVENTS - события жизненного цикла модели
     // ============================================================

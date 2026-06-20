@@ -22,6 +22,9 @@ class UserFactory extends Factory
             'is_active' => fake()->boolean(90),
             'is_verified' => fake()->boolean(80),
             'last_login_at' => fake()->dateTimeBetween('-30 days'),
+            'two_factor_secret' => null,
+            'two_factor_recovery_codes' => null,
+            'two_factor_confirmed_at' => null,
         ];
     }
 
