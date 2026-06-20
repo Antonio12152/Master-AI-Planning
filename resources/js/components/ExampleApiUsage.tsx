@@ -113,7 +113,7 @@ export function PlansList() {
 
             {/* Plans List */}
             <div className="space-y-4">
-                <h2 className="text-lg font-semibold">Your Plans</h2>
+                <h2 className="text-lg font-semibold text-white">Your Plans</h2>
                 {plans.length === 0 ? (
                     <p className="text-gray-600">No plans yet</p>
                 ) : (

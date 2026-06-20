@@ -7,7 +7,7 @@ use App\Http\Controllers\Api\IdeaController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\AdminController;
 
-// API routes with Sanctum token authentication
+// API routes with Sanctum authentication (stateful SPA + token auth)
 Route::middleware([
     'auth:sanctum',
     'verified'

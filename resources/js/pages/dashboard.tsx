@@ -51,8 +51,7 @@ export default function Dashboard() {
     return (
         <>
             <Head title="Dashboard" />
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-                <div className="mx-auto max-w-7xl px-4 py-12">
+            <div className="mx-auto max-w-7xl px-4 py-12">
                     {/* Header */}
                     <div className="mb-12">
                         <h1 className="text-4xl font-bold tracking-tight text-white mb-2">Dashboard</h1>

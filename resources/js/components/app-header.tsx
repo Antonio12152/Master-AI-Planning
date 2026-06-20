@@ -41,6 +41,14 @@ export default function AppHeaderLayout(): JSX.Element {
                     >
                         Home
                     </Link>
+                    {user && (
+                        <Link
+                            href="/plans"
+                            className="text-sm font-medium text-slate-300 hover:text-blue-400 transition duration-200"
+                        >
+                            Plans
+                        </Link>
+                    )}
                     <a href="#" className="text-sm font-medium text-slate-300 hover:text-blue-400 transition duration-200">
                         Contact
                     </a>
@@ -98,6 +106,14 @@ export default function AppHeaderLayout(): JSX.Element {
                         >
                             Home
                         </Link>
+                        {user && (
+                            <Link
+                                href="/plans"
+                                className="block h-9 px-3 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700 transition duration-200 flex items-center"
+                            >
+                                Plans
+                            </Link>
+                        )}
                         <a href="#" className="block h-9 px-3 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700 transition duration-200 flex items-center">
                             Contact
                         </a>

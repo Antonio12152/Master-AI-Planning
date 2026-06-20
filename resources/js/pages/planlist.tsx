@@ -142,7 +142,7 @@ export default function MainPlanPage(): JSX.Element {
             <div className="mx-auto px-4 py-12 md:max-w-7xl">
                 {/* Header */}
                 <div className="mb-12">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-2 tracking-tight">Your Plans</h1>
+                    <h1 className="text-4xl md:text-5xl font-bold mb-2 tracking-tight text-white">Your Plans</h1>
                     <p className="text-slate-400 text-lg">
                         Manage all your planning projects and ideas
                     </p>

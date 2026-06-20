@@ -1,6 +1,6 @@
 import React, { JSX } from 'react';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { User, Mail, MapPin, Calendar, CheckCircle, Clock, Edit } from 'lucide-react';
+import { User, Mail, MapPin, Calendar, CheckCircle, Clock, Edit, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface UserProfile {
@@ -50,8 +50,7 @@ export default function Profile(): JSX.Element {
     return (
         <>
             <Head title="My Profile" />
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-                <div className="mx-auto max-w-4xl px-4 py-12">
+            <div className="mx-auto max-w-4xl px-4 py-12">
                     {/* Header with Edit Button */}
                     <div className="mb-8 flex items-center justify-between">
                         <div>
@@ -193,6 +192,13 @@ export default function Profile(): JSX.Element {
                             </div>
                         </Link>
 
+                        <Link href="/plans" className="block">
+                            <div className="rounded-lg border border-slate-700/30 bg-slate-800/30 p-4 hover:bg-slate-800/50 transition cursor-pointer">
+                                <h3 className="text-white font-semibold mb-1">My Plans</h3>
+                                <p className="text-slate-400 text-sm">View and manage your plans</p>
+                            </div>
+                        </Link>
+
                         <Link href="/settings/security" className="block">
                             <div className="rounded-lg border border-slate-700/30 bg-slate-800/30 p-4 hover:bg-slate-800/50 transition cursor-pointer">
                                 <h3 className="text-white font-semibold mb-1">Security</h3>
@@ -208,7 +214,6 @@ export default function Profile(): JSX.Element {
                         </Link>
                     </div>
                 </div>
-            </div>
-        </>
-    );
-}
+            </>
+        );
+    }
