@@ -1,5 +1,6 @@
-import React, { JSX } from 'react';
-import { useSortable } from '@dnd-kit/sortable';
+import React, { JSX, memo } from 'react';
+import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { Trash2, Plus } from 'lucide-react';
 import type { IdeaGroup, Idea } from '@/types/ideas';
@@ -10,7 +11,7 @@ interface DraggableIdeaGroupProps {
     onAddIdea: (group: IdeaGroup) => void;
 }
 
-export default function DraggableIdeaGroup({
+export default memo(function DraggableIdeaGroup({
     group,
     onDeleteIdea,
     onAddIdea,
@@ -23,6 +24,12 @@ export default function DraggableIdeaGroup({
         transition,
         isDragging,
     } = useSortable({ id: `group-${group.id}`, data: { type: 'IdeaGroup', group } });
+
+    // Make the ideas container droppable for cross-group moves
+    const { setNodeRef: setDropRef, isOver } = useDroppable({
+        id: `group-${group.id}-drop`,
+        data: { type: 'IdeaGroupDropZone', groupId: group.id },
+    });
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -59,20 +66,30 @@ export default function DraggableIdeaGroup({
             </div>
 
             {/* Ideas List - АДАПТИВНОЕ МАСШТАБИРОВАНИЕ */}
-            <div className="flex-1 overflow-y-auto p-2 md:p-3 space-y-2 md:space-y-3 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent">
+            <div 
+                ref={setDropRef}
+                className={`flex-1 overflow-y-auto p-2 md:p-3 space-y-2 md:space-y-3 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent transition ${
+                    isOver ? 'bg-slate-700/40 border-l-2 border-slate-400' : ''
+                }`}
+            >
                 {group.ideas.length === 0 ? (
                     <div className="flex items-center justify-center h-24 text-slate-500 text-xs md:text-sm text-center px-2">
-                        No ideas yet. Add one to get started! ✨
+                        {isOver ? '📥 Drop idea here' : 'No ideas yet. Add one to get started! ✨'}
                     </div>
                 ) : (
-                    group.ideas.map((idea) => (
-                        <IdeaItem
-                            key={idea.id}
-                            idea={idea}
-                            groupId={group.id}
-                            onDelete={onDeleteIdea}
-                        />
-                    ))
+                    <SortableContext 
+                        items={group.ideas.map((idea) => `idea-${idea.id}`)}
+                        strategy={verticalListSortingStrategy}
+                    >
+                        {group.ideas.map((idea) => (
+                            <IdeaItem
+                                key={idea.id}
+                                idea={idea}
+                                groupId={group.id}
+                                onDelete={onDeleteIdea}
+                            />
+                        ))}
+                    </SortableContext>
                 )}
             </div>
 
@@ -88,12 +105,9 @@ export default function DraggableIdeaGroup({
             </button>
         </div>
     );
-}
+});
 
-/**
- * Компонент для отдельной идеи - МОБИЛЬНО-ОПТИМИЗИРОВАН
- */
-function IdeaItem({
+const IdeaItem = memo(function IdeaItem({
     idea,
     groupId,
     onDelete,
@@ -159,7 +173,7 @@ function IdeaItem({
             </div>
         </div>
     );
-}
+});
 
 /**
  * Форматирование даты (короткий формат для мобилей)

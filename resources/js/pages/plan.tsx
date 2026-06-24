@@ -1,4 +1,4 @@
-import React, { JSX, useState, useEffect } from 'react';
+import React, { JSX, useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, Lightbulb, Calendar, User, MessageCircle, Plus, Edit2, Trash2 } from 'lucide-react';
 import { Link, usePage } from '@inertiajs/react';
 import {
@@ -32,6 +32,7 @@ import {
     updateIdeaGroup,
     deleteIdeaGroup,
     reorderIdeaGroups,
+    reorderIdeas,
 } from '@/lib/api';
 import type { PlanDetail, IdeaGroup } from '@/types/ideas';
 
@@ -49,9 +50,14 @@ interface DragDataGroup {
 
 type DragData = DragDataIdea | DragDataGroup;
 
-export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
+export default function PlanDetailPage(): JSX.Element {
     const { auth } = usePage().props;
-    const planId = parseInt(id, 10);
+    const page = usePage();
+    
+    // Get ID from URL path
+    const urlParts = page.url.split('/');
+    const idFromUrl = urlParts[urlParts.length - 1];
+    const planId = parseInt(idFromUrl, 10);
 
     const [plan, setPlan] = useState<PlanDetail | null>(null);
     const [ideaGroups, setIdeaGroups] = useState<IdeaGroup[]>([]);
@@ -102,7 +108,7 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
             setPlan(convertedPlan);
             
             // Use nested ideas from idea groups
-            const groups: IdeaGroup[] = (planData.ideaGroups || []).map((group: any) => ({
+            const groups: IdeaGroup[] = (planData.idea_groups || []).map((group: any) => ({
                 id: group.id,
                 name: group.name,
                 description: group.description,
@@ -155,7 +161,7 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
         })
     );
 
-    const handleAddIdea = async (groupId: number, ideaText: string) => {
+    const handleAddIdea = useCallback(async (groupId: number, ideaText: string) => {
         try {
             const newIdea = await createIdea(groupId, {
                 text: ideaText,
@@ -177,9 +183,9 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
             setError('Failed to create idea');
             console.error('Failed to create idea:', err);
         }
-    };
+    }, [ideaGroups]);
 
-    const handleDeleteIdea = async (groupId: number, ideaId: number) => {
+    const handleDeleteIdea = useCallback(async (groupId: number, ideaId: number) => {
         try {
             await deleteIdea(ideaId);
             setIdeaGroups(
@@ -197,9 +203,9 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
             setError('Failed to delete idea');
             console.error('Failed to delete idea:', err);
         }
-    };
+    }, [ideaGroups]);
 
-    const handleStatusChange = async (newStatus: string) => {
+    const handleStatusChange = useCallback(async (newStatus: string) => {
         if (plan) {
             try {
                 const updatedPlan = await updatePlan(plan.id, {
@@ -212,9 +218,9 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
                 console.error('Failed to update status:', err);
             }
         }
-    };
+    }, [plan]);
 
-    const handleCreateGroup = async (data: { name: string; description?: string; color?: string }) => {
+    const handleCreateGroup = useCallback(async (data: { name: string; description?: string; color?: string }) => {
         try {
             setSavingGroupId(-1);
             const newGroup = await createIdeaGroup(planId, data);
@@ -230,9 +236,9 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
         } finally {
             setSavingGroupId(null);
         }
-    };
+    }, [planId, ideaGroups]);
 
-    const handleUpdateGroup = async (data: { name: string; description?: string; color?: string }) => {
+    const handleUpdateGroup = useCallback(async (data: { name: string; description?: string; color?: string }) => {
         if (!selectedGroupForManage) return;
         
         try {
@@ -249,9 +255,9 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
         } finally {
             setSavingGroupId(null);
         }
-    };
+    }, [ideaGroups, selectedGroupForManage]);
 
-    const handleDeleteGroup = async (groupId: number) => {
+    const handleDeleteGroup = useCallback(async (groupId: number) => {
         if (!confirm('Delete this group and all its ideas? This cannot be undone.')) return;
         
         try {
@@ -264,9 +270,9 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
         } finally {
             setSavingGroupId(null);
         }
-    };
+    }, [ideaGroups]);
 
-    const openGroupModal = (mode: 'create' | 'edit', group?: IdeaGroup) => {
+    const openGroupModal = useCallback((mode: 'create' | 'edit', group?: IdeaGroup) => {
         setGroupModalMode(mode);
         if (mode === 'edit' && group) {
             setSelectedGroupForManage(group);
@@ -274,13 +280,13 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
             setSelectedGroupForManage(null);
         }
         setShowGroupModal(true);
-    };
+    }, []);
 
-    const handleDragStart = (event: any) => {
+    const handleDragStart = useCallback((event: any) => {
         setActiveId(event.active.id);
-    };
+    }, []);
 
-    const handleDragEnd = async (event: DragEndEvent) => {
+    const handleDragEnd = useCallback(async (event: DragEndEvent) => {
         const { active, over } = event;
 
         if (!over) {
@@ -289,21 +295,21 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
         }
 
         const activeData = active.data.current as DragData | undefined;
-        const overData = over.data.current as DragData | undefined;
+        const overData = over.data.current as any;
 
-        if (!activeData || !overData) {
+        if (!activeData) {
             setActiveId(null);
             return;
         }
 
-        // Moving ideas between groups
-        if (activeData.type === 'Idea' && overData.type === 'Idea') {
+        // Case 1: Reorder ideas within same group (idea on idea)
+        if (activeData.type === 'Idea' && overData?.type === 'Idea') {
             const activeGroupId = (activeData as DragDataIdea).fromGroupId;
             const overGroupId = (overData as DragDataIdea).fromGroupId;
             const ideaId = (activeData as DragDataIdea).idea.id;
 
             if (activeGroupId === overGroupId) {
-                // Reorder within same group - update UI optimistically
+                // Reorder within same group
                 const groupIndex = ideaGroups.findIndex((g) => g.id === activeGroupId);
                 if (groupIndex === -1) {
                     setActiveId(null);
@@ -324,20 +330,26 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
                     );
                     setIdeaGroups(updatedGroups);
                     
-                    // No API call needed for reordering within group (sort_order not critical)
+                    // Persist sort_order to API
+                    try {
+                        await reorderIdeas(updatedGroups[groupIndex].ideas);
+                    } catch (err) {
+                        setError('Failed to save idea order');
+                        console.error('Failed to reorder ideas:', err);
+                        loadPlanData();
+                    }
                 }
             } else {
-                // Move to different group - call API to persist
+                // Move between groups
                 const idea = ideaGroups
                     .find((g) => g.id === activeGroupId)
                     ?.ideas.find((i) => i.id === ideaId);
 
                 if (idea) {
                     try {
-                        // Persist to API first
                         await moveIdea(ideaId, overGroupId);
                         
-                        // Update UI after successful API call
+                        // Update UI
                         const updatedGroups = ideaGroups.map((group) => {
                             if (group.id === activeGroupId) {
                                 return {
@@ -349,7 +361,7 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
                             if (group.id === overGroupId) {
                                 return {
                                     ...group,
-                                    ideas: [...group.ideas, { ...idea, groupId: overGroupId }],
+                                    ideas: [...group.ideas, { ...idea, group_id: overGroupId }],
                                     idea_count: (group.idea_count || 0) + 1,
                                 };
                             }
@@ -359,14 +371,56 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
                     } catch (err) {
                         setError('Failed to move idea');
                         console.error('Failed to move idea:', err);
-                        // UI will revert on next data load or user can refresh
+                    }
+                }
+            }
+        }
+        
+        // Case 2: Drop idea on group drop zone (for easier cross-group moves)
+        else if (activeData.type === 'Idea' && overData?.type === 'IdeaGroupDropZone') {
+            const activeGroupId = (activeData as DragDataIdea).fromGroupId;
+            const targetGroupId = overData.groupId;
+            const ideaId = (activeData as DragDataIdea).idea.id;
+
+            // Only process if moving to different group
+            if (activeGroupId !== targetGroupId) {
+                const idea = ideaGroups
+                    .find((g) => g.id === activeGroupId)
+                    ?.ideas.find((i) => i.id === ideaId);
+
+                if (idea) {
+                    try {
+                        await moveIdea(ideaId, targetGroupId);
+                        
+                        // Update UI
+                        const updatedGroups = ideaGroups.map((group) => {
+                            if (group.id === activeGroupId) {
+                                return {
+                                    ...group,
+                                    ideas: group.ideas.filter((i) => i.id !== idea.id),
+                                    idea_count: Math.max(0, (group.idea_count || 1) - 1),
+                                };
+                            }
+                            if (group.id === targetGroupId) {
+                                return {
+                                    ...group,
+                                    ideas: [...group.ideas, { ...idea, group_id: targetGroupId }],
+                                    idea_count: (group.idea_count || 0) + 1,
+                                };
+                            }
+                            return group;
+                        });
+                        setIdeaGroups(updatedGroups);
+                    } catch (err) {
+                        setError('Failed to move idea between groups');
+                        console.error('Failed to move idea:', err);
                     }
                 }
             }
         }
 
-        // Moving groups - reorder persisted to backend
-        if (activeData.type === 'IdeaGroup' && overData.type === 'IdeaGroup') {
+        // Case 3: Moving groups - reorder persisted to backend
+        if (activeData.type === 'IdeaGroup' && overData?.type === 'IdeaGroup') {
             const oldIndex = ideaGroups.findIndex(
                 (g) => g.id === (activeData as DragDataGroup).group.id
             );
@@ -389,7 +443,7 @@ export default function PlanDetailPage({ id }: { id: string }): JSX.Element {
         }
 
         setActiveId(null);
-    };
+    }, [ideaGroups, loadPlanData]);
 
     const getStatusColor = (status: string) => {
         switch (status) {

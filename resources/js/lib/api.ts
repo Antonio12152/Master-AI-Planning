@@ -259,3 +259,22 @@ export async function reorderIdeaGroups(groups: Array<{ id: number; [key: string
         throw error;
     }
 }
+
+/**
+ * Reorder ideas within a group by updating sort_order for each idea
+ * based on their position in the provided array
+ */
+export async function reorderIdeas(ideas: Array<{ id: number; [key: string]: any }>) {
+    try {
+        // Update each idea with its new sort_order based on array position
+        const updatePromises = ideas.map((idea, index) =>
+            updateIdea(idea.id, { sort_order: index })
+        );
+        
+        const results = await Promise.all(updatePromises);
+        return results;
+    } catch (error) {
+        console.error('Failed to reorder ideas:', error);
+        throw error;
+    }
+}
