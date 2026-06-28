@@ -11,7 +11,7 @@ class AddPlanMemberRequest extends FormRequest
     {
         $plan = $this->route('plan');
         
-        // Только админы могут добавлять членов
+        //     
         return $plan && $plan->canManageMembers($this->user());
     }
 
@@ -24,7 +24,7 @@ class AddPlanMemberRequest extends FormRequest
                 'required',
                 'integer',
                 'exists:users,id',
-                // Не может быть уже членом этого плана
+                //       
                 Rule::unique('plan_members')->where(function ($query) use ($planId) {
                     $query->where('plan_id', $planId);
                 }),
@@ -40,17 +40,17 @@ class AddPlanMemberRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'user_id.required' => 'User ID обязателен',
-            'user_id.exists' => 'Пользователь не найден',
-            'user_id.unique' => 'Этот пользователь уже добавлен в план',
-            'role.required' => 'Роль обязательна',
-            'role.in' => 'Роль должна быть: admin, editor или viewer',
+            'user_id.required' => 'User ID ',
+            'user_id.exists' => '  ',
+            'user_id.unique' => '     ',
+            'role.required' => ' ',
+            'role.in' => '  : admin, editor  viewer',
         ];
     }
 
     protected function prepareForValidation(): void
     {
-        // Убедиться, что user_id - это число
+        // ,  user_id -  
         if ($this->has('user_id')) {
             $this->merge([
                 'user_id' => (int) $this->user_id,

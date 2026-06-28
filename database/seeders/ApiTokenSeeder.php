@@ -13,7 +13,7 @@ class ApiTokenSeeder extends Seeder
         $admin = User::where('email', 'admin@example.com')->first();
 
         if ($admin) {
-            // Создать токен для админа
+            //    
             ApiToken::factory()
                 ->create([
                     'user_id' => $admin->id,
@@ -22,7 +22,7 @@ class ApiTokenSeeder extends Seeder
                 ]);
         }
 
-        // Создать токены для остальных пользователей (50% вероятность)
+        //      (50% )
         User::where('email', '!=', 'admin@example.com')
             ->get()
             ->each(function (User $user) {

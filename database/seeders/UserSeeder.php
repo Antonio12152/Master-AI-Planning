@@ -10,7 +10,7 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Создать админ пользователя
+        //   
         User::create([
             'name' => 'Admin User',
             'email' => 'admin@example.com',
@@ -21,15 +21,15 @@ class UserSeeder extends Seeder
             'is_verified' => true,
         ]);
 
-        // Создать тестовых пользователей
+        //   
         User::factory(5)->create();
 
-        // Создать неверифицированного пользователя
+        //   
         User::factory()->unverified()->create([
             'email' => 'unverified@example.com',
         ]);
 
-        // Создать неактивного пользователя
+        //   
         User::factory()->inactive()->create([
             'email' => 'inactive@example.com',
         ]);

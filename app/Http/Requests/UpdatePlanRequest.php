@@ -10,7 +10,7 @@ class UpdatePlanRequest extends FormRequest
     {
         $plan = $this->route('plan');
         
-        // Проверить, может ли пользователь редактировать план
+        // ,     
         return $plan && $plan->canEdit($this->user());
     }
 
@@ -56,12 +56,12 @@ class UpdatePlanRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Название плана обязательно',
-            'name.min' => 'Название должно быть минимум 3 символа',
-            'name.max' => 'Название может быть максимум 255 символов',
-            'description.max' => 'Описание может быть максимум 1000 символов',
-            'color.regex' => 'Цвет должен быть в формате #RRGGBB',
-            'status.in' => 'Статус должен быть: active, inactive или archived',
+            'name.required' => '  ',
+            'name.min' => '    3 ',
+            'name.max' => '    255 ',
+            'description.max' => '    1000 ',
+            'color.regex' => '     #RRGGBB',
+            'status.in' => '  : active, inactive  archived',
         ];
     }
 

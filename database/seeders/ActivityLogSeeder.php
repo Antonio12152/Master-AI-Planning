@@ -16,7 +16,7 @@ class ActivityLogSeeder extends Seeder
         $actions = ['created', 'updated', 'deleted', 'moved', 'completed'];
         $entityTypes = ['plan', 'group', 'idea'];
 
-        // Создать логи для каждого плана
+        //     
         Plan::all()->each(function (Plan $plan) use ($actions, $entityTypes) {
             $logCount = rand(5, 15);
 

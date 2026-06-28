@@ -80,29 +80,29 @@ class Plan extends Model
         return $query->where('is_public', true);
     }
 
-    // Методы контроля доступа
+    //   
     /**
-     * Проверить, может ли пользователь просматривать план
+     * ,     
      */
     public function canView(User $user): bool
     {
-        // Владелец может всегда просматривать
+        //    
         if ($this->user_id === $user->id) {
             return true;
         }
 
-        // Только члены плана могут просматривать (через plan_members)
+        //      ( plan_members)
         return $this->members()
             ->where('user_id', $user->id)
             ->exists();
     }
 
     /**
-     * Проверить, может ли пользователь редактировать план
+     * ,     
      */
     public function canEdit(User $user): bool
     {
-        // Только владелец или админ/редактор могут редактировать
+        //    /  
         if ($this->user_id === $user->id) {
             return true;
         }
@@ -115,11 +115,11 @@ class Plan extends Model
     }
 
     /**
-     * Проверить, может ли пользователь управлять членами плана
+     * ,      
      */
     public function canManageMembers(User $user): bool
     {
-        // Только владелец или админ могут управлять членами
+        //       
         if ($this->user_id === $user->id) {
             return true;
         }
@@ -132,12 +132,12 @@ class Plan extends Model
     }
 
     /**
-     * Получить роль пользователя в плане
+     *     
      */
     public function getUserRole(User $user): ?string
     {
         if ($this->user_id === $user->id) {
-            return 'owner'; // Владелец
+            return 'owner'; // 
         }
 
         return $this->members()

@@ -19,7 +19,7 @@ class PlanMemberFactory extends Factory
     }
 
     /**
-     * Админ - полный доступ, может управлять членами
+     *  -  ,   
      */
     public function admin(): static
     {
@@ -29,7 +29,7 @@ class PlanMemberFactory extends Factory
     }
 
     /**
-     * Редактор - может создавать и редактировать идеи и группы
+     *  -       
      */
     public function editor(): static
     {
@@ -39,7 +39,7 @@ class PlanMemberFactory extends Factory
     }
 
     /**
-     * Зритель - может только просматривать
+     *  -   
      */
     public function viewer(): static
     {

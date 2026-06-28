@@ -62,7 +62,7 @@ class PlanMember extends Model
         return $query->where('role', 'viewer');
     }
 
-    // Методы для проверки роли
+    //    
     public function isAdmin(): bool
     {
         return $this->role === 'admin';

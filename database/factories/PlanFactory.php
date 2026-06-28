@@ -21,8 +21,8 @@ class PlanFactory extends Factory
             'icon' => fake()->randomElement($icons),
             'idea_count' => fake()->numberBetween(0, 50),
             'group_count' => fake()->numberBetween(1, 10),
-            'member_count' => 1, // минимально владелец
-            'is_public' => false, // по умолчанию приватный
+            'member_count' => 1, //  
+            'is_public' => false, //   
             'archived_at' => fake()->boolean(20) ? fake()->dateTime() : null,
         ];
     }

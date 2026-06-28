@@ -11,7 +11,7 @@ class IdeaGroupSeeder extends Seeder
     public function run(): void
     {
         Plan::all()->each(function (Plan $plan) {
-            // Каждому плану создать 2-5 групп
+            //    2-5 
             $groupCount = rand(2, 5);
             
             IdeaGroup::factory($groupCount)

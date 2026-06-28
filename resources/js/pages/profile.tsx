@@ -19,7 +19,7 @@ interface UserProfile {
 }
 
 export default function Profile(): JSX.Element {
-    const { user } = usePage().props as { user: UserProfile };
+    const { user } = usePage<{ user: UserProfile }>().props;
 
     // Debug: Check if user data exists
     if (!user) {

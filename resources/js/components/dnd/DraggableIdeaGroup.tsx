@@ -46,11 +46,11 @@ export default memo(function DraggableIdeaGroup({
                 : 'border-slate-600 bg-slate-800/50 hover:border-slate-500'
                 }`}
         >
-            {/* Group Header - СЕНСОРНАЯ ЗОНА */}
+            {/* Group Header -   */}
             <div
                 {...attributes}
                 {...listeners}
-                className="flex items-center justify-between p-3 md:p-4 border-b border-slate-700 cursor-grab active:cursor-grabbing touch-none select-none bg-gradient-to-r from-slate-700 to-slate-800 rounded-t-md"
+                className="flex items-center justify-between p-3 md:p-4 border-b border-slate-700 cursor-grab active:cursor-grabbing touch-none select-none bg-gradient-to-r from-slate-700 to-slate-800 rounded-t-md min-h-14"
                 style={{
                     WebkitTouchCallout: 'none',
                     WebkitUserSelect: 'none',
@@ -65,10 +65,10 @@ export default memo(function DraggableIdeaGroup({
                 </span>
             </div>
 
-            {/* Ideas List - АДАПТИВНОЕ МАСШТАБИРОВАНИЕ */}
+            {/* Ideas List -   */}
             <div 
                 ref={setDropRef}
-                className={`flex-1 overflow-y-auto p-2 md:p-3 space-y-2 md:space-y-3 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent transition ${
+                className={`flex-1 overflow-y-auto p-2 md:p-3 space-y-2 md:space-y-3 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent transition min-h-24 ${
                     isOver ? 'bg-slate-700/40 border-l-2 border-slate-400' : ''
                 }`}
             >
@@ -139,7 +139,7 @@ const IdeaItem = memo(function IdeaItem({
             ref={setNodeRef}
             {...attributes}
             {...listeners}
-            className={`p-2 md:p-3 rounded-lg border-2 transition cursor-grab active:cursor-grabbing group touch-none ${isDragging
+            className={`p-2 md:p-3 rounded-lg border-2 transition cursor-grab active:cursor-grabbing group touch-none min-h-16 ${isDragging
                 ? 'border-purple-500 bg-purple-500/20 shadow-lg scale-105'
                 : 'border-slate-600 bg-slate-700/30 hover:border-slate-500 hover:bg-slate-700/50'
                 }`}
@@ -150,12 +150,12 @@ const IdeaItem = memo(function IdeaItem({
                 userSelect: 'none',
             }}
         >
-            {/* Text с оптимизацией для мобилей */}
+            {/* Text     */}
             <p className="text-xs md:text-sm text-slate-100 mb-2 line-clamp-3 break-words">
                 {idea.text}
             </p>
 
-            {/* Footer с датой и кнопкой удаления */}
+            {/* Footer      */}
             <div className="flex items-center justify-between gap-2">
                 <span className="text-xs text-slate-500 flex-shrink-0">
                     {formatDateShort(idea.created_at)}
@@ -176,7 +176,7 @@ const IdeaItem = memo(function IdeaItem({
 });
 
 /**
- * Форматирование даты (короткий формат для мобилей)
+ *   (   )
  */
 function formatDateShort(dateString: string): string {
     const date = new Date(dateString);

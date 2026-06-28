@@ -126,6 +126,7 @@ export async function updateIdea(
         status?: string;
         priority?: number;
         tags?: string[];
+        sort_order?: number;
     }
 ) {
     try {

@@ -13,24 +13,24 @@ class PlanSeeder extends Seeder
         $admin = User::where('email', 'admin@example.com')->first();
 
         if ($admin) {
-            // Создать активные планы для админа
+            //     
             Plan::factory(3)
                 ->active()
                 ->create(['user_id' => $admin->id]);
 
-            // Создать публичный план
+            //   
             Plan::factory()
                 ->public()
                 ->active()
                 ->create(['user_id' => $admin->id]);
 
-            // Создать архивированный план
+            //   
             Plan::factory()
                 ->archived()
                 ->create(['user_id' => $admin->id]);
         }
 
-        // Создать планы для остальных пользователей
+        //     
         User::where('email', '!=', 'admin@example.com')
             ->limit(5)
             ->get()

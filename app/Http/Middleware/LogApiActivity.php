@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 class LogApiActivity
 {
     /**
-     * Логировать все API запросы в activity_logs
+     *   API   activity_logs
      * 
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure  $next
@@ -20,7 +20,7 @@ class LogApiActivity
     {
         $response = $next($request);
 
-        // Логировать только POST, PUT, DELETE, PATCH запросы
+        //   POST, PUT, DELETE, PATCH 
         if (in_array($request->method(), ['POST', 'PUT', 'DELETE', 'PATCH'])) {
             $this->logActivity($request, $response);
         }
@@ -29,7 +29,7 @@ class LogApiActivity
     }
 
     /**
-     * Логировать действие пользователя
+     *   
      */
     private function logActivity(Request $request, Response $response): void
     {
@@ -39,14 +39,14 @@ class LogApiActivity
             return;
         }
 
-        // Определить тип действия и сущность
+        //     
         [$action, $entityType, $entityId] = $this->parseRequest($request);
 
         if (!$action || !$entityType) {
             return;
         }
 
-        // Определить план (если применимо)
+        //   ( )
         $planId = $this->extractPlanId($request);
 
         ActivityLog::create([
@@ -65,7 +65,7 @@ class LogApiActivity
     }
 
     /**
-     * Определить тип действия из URL
+     *     URL
      */
     private function parseRequest(Request $request): array
     {
@@ -116,7 +116,7 @@ class LogApiActivity
     }
 
     /**
-     * Извлечь ID из пути
+     *  ID  
      */
     private function extractIdFromPath(string $path, string $entity): ?int
     {
@@ -132,21 +132,21 @@ class LogApiActivity
     }
 
     /**
-     * Извлечь ID плана из пути
+     *  ID   
      */
     private function extractPlanId(Request $request): ?int
     {
-        // Для /api/plans/{id}
+        //  /api/plans/{id}
         if ($request->route('plan')) {
             return $request->route('plan')->id;
         }
 
-        // Для /api/plans/{plan_id}/groups/{id}
+        //  /api/plans/{plan_id}/groups/{id}
         if ($request->route('plan_id')) {
             return $request->route('plan_id');
         }
 
-        // Для /api/groups/{group_id}/ideas/{id}
+        //  /api/groups/{group_id}/ideas/{id}
         if ($request->route('group_id')) {
             $group = $request->route('group');
             if ($group && isset($group->plan_id)) {
@@ -158,12 +158,12 @@ class LogApiActivity
     }
 
     /**
-     * Получить изменения (diff между старым и новым)
+     *   (diff    )
      */
     private function getChanges(Request $request): array
     {
-        // Можно сравнить с тем, что было в БД
-        // Для простоты возвращаем то, что пришло в запросе
+        //    ,    
+        //    ,    
         return [
             'data' => $request->all(),
         ];

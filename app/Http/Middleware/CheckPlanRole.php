@@ -9,9 +9,9 @@ use Illuminate\Http\Request;
 class CheckPlanRole
 {
     /**
-     * Проверить роль пользователя в плане
+     *     
      * 
-     * Использование:
+     * :
      * Route::post('/plans/{plan}/members', [...]) ->middleware('check.plan.role:admin');
      * 
      * @param  \Illuminate\Http\Request  $request
@@ -25,7 +25,7 @@ class CheckPlanRole
 
         if (!$plan instanceof Plan) {
             return response()->json([
-                'message' => 'План не найден'
+                'message' => '  '
             ], 404);
         }
 
@@ -33,17 +33,17 @@ class CheckPlanRole
 
         if (!$user) {
             return response()->json([
-                'message' => 'Не авторизован'
+                'message' => ' '
             ], 401);
         }
 
-        // Получить роль пользователя в плане
+        //     
         $userRole = $plan->getUserRole($user);
 
-        // Проверить, есть ли у пользователя одна из требуемых ролей
+        // ,        
         if (!$this->hasRole($userRole, $roles)) {
             return response()->json([
-                'message' => 'У вас недостаточно прав для этого действия',
+                'message' => '      ',
                 'required_roles' => $roles,
                 'your_role' => $userRole
             ], 403);
@@ -53,7 +53,7 @@ class CheckPlanRole
     }
 
     /**
-     * Проверить, есть ли у пользователя требуемая роль
+     * ,      
      */
     private function hasRole(?string $userRole, array $allowedRoles): bool
     {
@@ -61,7 +61,7 @@ class CheckPlanRole
             return false;
         }
 
-        // Иерархия ролей: admin > editor > viewer
+        //  : admin > editor > viewer
         $roleHierarchy = [
             'admin' => 3,
             'editor' => 2,

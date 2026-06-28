@@ -12,27 +12,27 @@ use Illuminate\Pagination\LengthAwarePaginator;
 class PlanService
 {
     /**
-     * Создать новый план
+     *   
      */
     public function createPlan(array $data, User $user): Plan
     {
-        // Создать план
+        //  
         $plan = $user->plans()->create($data);
 
-        // Обязательно добавить владельца в members
+        //     members
         $this->addMember($plan, $user->id, 'admin');
 
-        // Обновить счетчик
+        //  
         $plan->update(['member_count' => 1]);
 
-        // Логировать
+        // 
         $this->logAction($user, $plan, 'created_plan');
 
         return $plan;
     }
 
     /**
-     * Обновить план
+     *  
      */
     public function updatePlan(Plan $plan, array $data, User $user): Plan
     {
@@ -40,7 +40,7 @@ class PlanService
         
         $plan->update($data);
 
-        // Логировать
+        // 
         $this->logAction($user, $plan, 'updated_plan', [
             'changes' => $this->getDiff($oldData, $data),
         ]);
@@ -49,22 +49,22 @@ class PlanService
     }
 
     /**
-     * Удалить план (мягкое удаление)
+     *   ( )
      */
     public function deletePlan(Plan $plan, User $user): bool
     {
-        // Логировать перед удалением
+        //   
         $this->logAction($user, $plan, 'deleted_plan');
 
-        // Удалить все члены плана
+        //    
         $plan->members()->delete();
 
-        // Удалить все идеи и группы (cascade от миграции)
+        //      (cascade  )
         return $plan->delete();
     }
 
     /**
-     * Добавить члена в план
+     *    
      */
     public function addMember(Plan $plan, int $userId, string $role = 'viewer'): PlanMember
     {
@@ -73,14 +73,14 @@ class PlanService
             'role' => $role,
         ]);
 
-        // Обновить счетчик
+        //  
         $plan->update(['member_count' => $plan->members()->count()]);
 
         return $member;
     }
 
     /**
-     * Обновить роль члена
+     *   
      */
     public function updateMemberRole(Plan $plan, int $userId, string $role): PlanMember
     {
@@ -89,14 +89,14 @@ class PlanService
         $oldRole = $member->role;
         $member->update(['role' => $role]);
 
-        // Логировать
+        // 
         // ActivityLog::create([...])
 
         return $member;
     }
 
     /**
-     * Удалить члена из плана
+     *    
      */
     public function removeMember(Plan $plan, int $userId): bool
     {
@@ -105,7 +105,7 @@ class PlanService
             ->delete();
 
         if ($deleted) {
-            // Обновить счетчик
+            //  
             $plan->update(['member_count' => $plan->members()->count()]);
         }
 
@@ -113,7 +113,7 @@ class PlanService
     }
 
     /**
-     * Получить все доступные планы для пользователя
+     *      
      */
     public function getUserAccessiblePlans(User $user, int $perPage = 15): LengthAwarePaginator
     {
@@ -124,7 +124,7 @@ class PlanService
     }
 
     /**
-     * Получить планы, созданные пользователем
+     *  ,  
      */
     public function getUserCreatedPlans(User $user, int $perPage = 15): LengthAwarePaginator
     {
@@ -135,7 +135,7 @@ class PlanService
     }
 
     /**
-     * Получить планы, к которым добавлен пользователь
+     *  ,    
      */
     public function getUserSharedPlans(User $user, int $perPage = 15): LengthAwarePaginator
     {
@@ -146,7 +146,7 @@ class PlanService
     }
 
     /**
-     * Получить детали плана с вложенными данными
+     *      
      */
     public function getPlanDetails(Plan $plan): Plan
     {
@@ -169,7 +169,7 @@ class PlanService
     }
 
     /**
-     * Получить статистику по плану
+     *    
      */
     public function getPlanStatistics(Plan $plan): array
     {
@@ -188,7 +188,7 @@ class PlanService
     }
 
     /**
-     * Архивировать план
+     *  
      */
     public function archivePlan(Plan $plan, User $user): Plan
     {
@@ -203,7 +203,7 @@ class PlanService
     }
 
     /**
-     * Восстановить план из архива
+     *    
      */
     public function unarchivePlan(Plan $plan, User $user): Plan
     {
@@ -218,7 +218,7 @@ class PlanService
     }
 
     /**
-     * Логировать действие
+     *  
      */
     private function logAction(User $user, Plan $plan, string $action, array $extra = []): void
     {
@@ -234,7 +234,7 @@ class PlanService
     }
 
     /**
-     * Получить разницу между старым и новым состоянием
+     *       
      */
     private function getDiff(array $old, array $new): array
     {

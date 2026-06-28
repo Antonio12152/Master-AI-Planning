@@ -3,10 +3,10 @@ import { ChevronLeft, Lightbulb, Calendar, User, MessageCircle, Plus, Edit2, Tra
 import { Link, usePage } from '@inertiajs/react';
 import {
     DndContext,
-    closestCenter,
     KeyboardSensor,
     PointerSensor,
     TouchSensor,
+    pointerWithin,
     useSensor,
     useSensors,
     DragEndEvent,
@@ -72,6 +72,7 @@ export default function PlanDetailPage(): JSX.Element {
     const [selectedGroupForManage, setSelectedGroupForManage] = useState<IdeaGroup | null>(null);
     const [activeId, setActiveId] = useState<string | number | null>(null);
     const [savingGroupId, setSavingGroupId] = useState<number | null>(null);
+    const [savingOrder, setSavingOrder] = useState(false);
 
     // Load plan details and ideas on mount
     useEffect(() => {
@@ -107,31 +108,34 @@ export default function PlanDetailPage(): JSX.Element {
             };
             setPlan(convertedPlan);
             
-            // Use nested ideas from idea groups
+            // Use nested ideas from idea groups and preserve their stored ordering
             const groups: IdeaGroup[] = (planData.idea_groups || []).map((group: any) => ({
                 id: group.id,
                 name: group.name,
                 description: group.description,
                 sort_order: group.sort_order,
                 color: group.color,
-                ideas: (group.ideas || []).map((idea: any) => ({
-                    id: idea.id,
-                    text: idea.text,
-                    description: idea.description,
-                    status: idea.status,
-                    priority: idea.priority,
-                    tags: idea.tags,
-                    created_at: idea.created_at,
-                    completed_at: idea.completed_at,
-                    group_id: idea.group_id,
-                    sort_order: idea.sort_order,
-                    plan_id: idea.plan_id,
-                })),
+                ideas: (group.ideas || [])
+                    .map((idea: any) => ({
+                        id: idea.id,
+                        text: idea.text,
+                        description: idea.description,
+                        status: idea.status,
+                        priority: idea.priority,
+                        tags: idea.tags,
+                        created_at: idea.created_at,
+                        completed_at: idea.completed_at,
+                        group_id: idea.group_id,
+                        sort_order: idea.sort_order,
+                        plan_id: idea.plan_id,
+                    }))
+                    .sort((a: { sort_order?: number }, b: { sort_order?: number }) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
                 idea_count: group.idea_count || group.ideas?.length || 0,
                 created_at: group.created_at,
                 updated_at: group.updated_at,
                 plan_id: group.plan_id,
-            }));
+            }))
+                .sort((a: { sort_order?: number }, b: { sort_order?: number }) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
             
             setIdeaGroups(groups);
         } catch (err) {
@@ -146,14 +150,14 @@ export default function PlanDetailPage(): JSX.Element {
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
-                distance: 8,
-                delay: 100,
+                distance: 3,
+                delay: 0,
             },
         }),
         useSensor(TouchSensor, {
             activationConstraint: {
-                delay: 100,
-                tolerance: 50,
+                delay: 0,
+                tolerance: 8,
             },
         }),
         useSensor(KeyboardSensor, {
@@ -282,6 +286,29 @@ export default function PlanDetailPage(): JSX.Element {
         setShowGroupModal(true);
     }, []);
 
+    const persistIdeaOrder = useCallback(async (updatedGroups: IdeaGroup[]) => {
+        setSavingOrder(true);
+
+        try {
+            await Promise.all(
+                updatedGroups.map((group) =>
+                    reorderIdeas(
+                        group.ideas.map((idea, index) => ({
+                            ...idea,
+                            sort_order: index,
+                        }))
+                    )
+                )
+            );
+        } catch (err) {
+            setError('Failed to save idea order');
+            console.error('Failed to persist idea order:', err);
+            throw err;
+        } finally {
+            setSavingOrder(false);
+        }
+    }, []);
+
     const handleDragStart = useCallback((event: any) => {
         setActiveId(event.active.id);
     }, []);
@@ -329,14 +356,16 @@ export default function PlanDetailPage(): JSX.Element {
                         newIndex
                     );
                     setIdeaGroups(updatedGroups);
-                    
-                    // Persist sort_order to API
+
+                    // Persist sort_order to API and refresh from server
                     try {
-                        await reorderIdeas(updatedGroups[groupIndex].ideas);
+                        await persistIdeaOrder(updatedGroups);
+                        await loadPlanData();
                     } catch (err) {
-                        setError('Failed to save idea order');
+                        const message = 'Failed to save idea order';
+                        setError(message);
                         console.error('Failed to reorder ideas:', err);
-                        loadPlanData();
+                        await loadPlanData();
                     }
                 }
             } else {
@@ -368,6 +397,8 @@ export default function PlanDetailPage(): JSX.Element {
                             return group;
                         });
                         setIdeaGroups(updatedGroups);
+                        await persistIdeaOrder(updatedGroups);
+                        await loadPlanData();
                     } catch (err) {
                         setError('Failed to move idea');
                         console.error('Failed to move idea:', err);
@@ -411,6 +442,8 @@ export default function PlanDetailPage(): JSX.Element {
                             return group;
                         });
                         setIdeaGroups(updatedGroups);
+                        await persistIdeaOrder(updatedGroups);
+                        await loadPlanData();
                     } catch (err) {
                         setError('Failed to move idea between groups');
                         console.error('Failed to move idea:', err);
@@ -431,13 +464,17 @@ export default function PlanDetailPage(): JSX.Element {
                 setIdeaGroups(reorderedGroups);
                 
                 // Persist group order to backend
+                setSavingOrder(true);
                 try {
                     await reorderIdeaGroups(reorderedGroups);
+                    await loadPlanData();
                 } catch (err) {
                     setError('Failed to save group order');
                     console.error('Failed to reorder groups:', err);
                     // Revert to original order on error
                     loadPlanData();
+                } finally {
+                    setSavingOrder(false);
                 }
             }
         }
@@ -521,6 +558,13 @@ export default function PlanDetailPage(): JSX.Element {
                     </div>
                 )}
 
+                {savingOrder && (
+                    <div className="mb-8 flex items-center gap-3 rounded-lg bg-blue-500/10 border border-blue-500/20 p-4 text-blue-200">
+                        <div className="inline-flex h-5 w-5 animate-spin rounded-full border-2 border-blue-200 border-t-transparent" />
+                        <span>Saving idea order...</span>
+                    </div>
+                )}
+
                 {/* Header Section */}
                 <div className="mb-12">
                     <div className="flex items-start justify-between mb-6">
@@ -591,7 +635,7 @@ export default function PlanDetailPage(): JSX.Element {
                 {/* Idea Groups with DndContext */}
                 <DndContext
                     sensors={sensors}
-                    collisionDetection={closestCenter}
+                    collisionDetection={pointerWithin}
                     onDragStart={handleDragStart}
                     onDragEnd={handleDragEnd}
                 >

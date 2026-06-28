@@ -7,17 +7,17 @@ use Illuminate\Foundation\Http\FormRequest;
 class StorePlanRequest extends FormRequest
 {
     /**
-     * Определить, авторизирован ли пользователь для этого запроса
+     * ,      
      */
     public function authorize(): bool
     {
-        // Пользователь должен быть авторизирован
-        // (проверка через middleware 'auth:sanctum')
+        //    
+        // (  middleware 'auth:sanctum')
         return $this->user() !== null;
     }
 
     /**
-     * Правила валидации
+     *  
      */
     public function rules(): array
     {
@@ -27,7 +27,7 @@ class StorePlanRequest extends FormRequest
                 'string',
                 'min:3',
                 'max:255',
-                'not_regex:/^test$/i', // Не разрешать тестовые названия
+                'not_regex:/^test$/i', //    
             ],
             'description' => [
                 'nullable',
@@ -42,7 +42,7 @@ class StorePlanRequest extends FormRequest
             'icon' => [
                 'nullable',
                 'string',
-                'max:10', // Для emoji
+                'max:10', //  emoji
             ],
             'is_public' => [
                 'nullable',
@@ -52,35 +52,35 @@ class StorePlanRequest extends FormRequest
     }
 
     /**
-     * Сообщения об ошибках (на русском)
+     *    ( )
      */
     public function messages(): array
     {
         return [
-            'name.required' => 'Название плана обязательно',
-            'name.min' => 'Название должно быть минимум 3 символа',
-            'name.max' => 'Название может быть максимум 255 символов',
-            'name.not_regex' => 'Используйте реальное название, а не "test"',
-            'description.max' => 'Описание может быть максимум 1000 символов',
-            'color.regex' => 'Цвет должен быть в формате #RRGGBB (например, #FF5733)',
-            'icon.max' => 'Иконка может быть максимум 10 символов',
-            'is_public.boolean' => 'is_public должен быть true или false',
+            'name.required' => '  ',
+            'name.min' => '    3 ',
+            'name.max' => '    255 ',
+            'name.not_regex' => '  ,   "test"',
+            'description.max' => '    1000 ',
+            'color.regex' => '     #RRGGBB (, #FF5733)',
+            'icon.max' => '    10 ',
+            'is_public.boolean' => 'is_public   true  false',
         ];
     }
 
     /**
-     * Подготовить данные для валидации
+     *    
      */
     protected function prepareForValidation(): void
     {
-        // Привести is_public к boolean
+        //  is_public  boolean
         if ($this->has('is_public')) {
             $this->merge([
                 'is_public' => filter_var($this->is_public, FILTER_VALIDATE_BOOLEAN),
             ]);
         }
 
-        // Убрать пробелы в начале и конце
+        //      
         $this->merge([
             'name' => trim($this->name),
             'description' => trim($this->description ?? ''),
@@ -88,7 +88,7 @@ class StorePlanRequest extends FormRequest
     }
 
     /**
-     * Получить валидированные данные
+     *   
      */
     public function validated($key = null, $default = null): mixed
     {

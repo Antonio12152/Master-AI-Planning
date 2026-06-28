@@ -135,9 +135,9 @@ class IdeaController extends Controller
 
         $newGroup = IdeaGroup::findOrFail($request->get('group_id'));
 
-        if ($newGroup->plan_id !== $idea->plan_id) {
+        if (!$newGroup->plan->canEdit($request->user())) {
             return response()->json([
-                'message' => 'Group must be in the same plan'
+                'message' => 'No rights to move to this group'
             ], 403);
         }
 

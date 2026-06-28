@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 class IdeaService
 {
     /**
-     * Создать новую идею
+     *   
      */
     public function createIdea(IdeaGroup $group, array $data, User $user): Idea
     {
@@ -21,30 +21,30 @@ class IdeaService
             'plan_id' => $group->plan_id,
         ]));
 
-        // Обновить счетчики
+        //  
         $this->updateCounters($group);
 
-        // Логировать
+        // 
         $this->logAction($user, $group->plan_id, 'created_idea', 'idea', $idea->id);
 
         return $idea;
     }
 
     /**
-     * Обновить идею
+     *  
      */
     public function updateIdea(Idea $idea, array $data, User $user): Idea
     {
         $oldData = $idea->only(['text', 'description', 'status', 'priority', 'tags']);
         
-        // Если изменился статус на "completed", добавить timestamp
+        //     "completed",  timestamp
         if (isset($data['status']) && $data['status'] === 'completed' && $oldData['status'] !== 'completed') {
             $data['completed_at'] = now();
         }
         
         $idea->update($data);
 
-        // Логировать
+        // 
         $this->logAction($user, $idea->plan_id, 'updated_idea', 'idea', $idea->id, [
             'changes' => $this->getDiff($oldData, $data),
         ]);
@@ -53,21 +53,21 @@ class IdeaService
     }
 
     /**
-     * Удалить идею
+     *  
      */
     public function deleteIdea(Idea $idea, User $user): bool
     {
         $group = $idea->group;
         $planId = $idea->plan_id;
 
-        // Логировать
+        // 
         $this->logAction($user, $planId, 'deleted_idea', 'idea', $idea->id);
 
-        // Удалить
+        // 
         $deleted = $idea->delete();
 
         if ($deleted) {
-            // Обновить счетчики
+            //  
             $this->updateCounters($group);
         }
 
@@ -75,22 +75,33 @@ class IdeaService
     }
 
     /**
-     * Переместить идею в другую группу
+     *     
      */
     public function moveIdea(Idea $idea, IdeaGroup $newGroup, User $user): Idea
     {
         $oldGroup = $idea->group;
+        $oldPlanId = $idea->plan_id;
 
         $idea->update([
             'group_id' => $newGroup->id,
             'plan_id' => $newGroup->plan_id,
         ]);
 
-        // Обновить счетчики обеих групп
+        //     ,   , / 
         $this->updateCounters($oldGroup);
         $this->updateCounters($newGroup);
 
-        // Логировать
+        if ($oldPlanId !== $newGroup->plan_id) {
+            $oldPlan = Plan::find($oldPlanId);
+            if ($oldPlan) {
+                $oldPlan->refresh();
+                $oldPlan->update(['idea_count' => $oldPlan->ideas()->count()]);
+            }
+            $newGroup->plan->refresh();
+            $newGroup->plan->update(['idea_count' => $newGroup->plan->ideas()->count()]);
+        }
+
+        // 
         $this->logAction($user, $newGroup->plan_id, 'moved_idea', 'idea', $idea->id, [
             'changes' => [
                 'from_group' => $oldGroup->id,
@@ -103,7 +114,7 @@ class IdeaService
 
 
     /**
-     * Получить идеи группы с фильтрацией
+     *     
      */
     public function getGroupIdeas(
         IdeaGroup $group,
@@ -133,7 +144,7 @@ class IdeaService
     }
 
     /**
-     * Получить идеи плана со статистикой
+     *     
      */
     public function getPlanIdeas(
         Plan $plan,
@@ -152,7 +163,7 @@ class IdeaService
     }
 
     /**
-     * Получить идеи пользователя (все его планы)
+     *    (  )
      */
     public function getUserIdeas(User $user, int $perPage = 20): LengthAwarePaginator
     {
@@ -163,7 +174,7 @@ class IdeaService
     }
 
     /**
-     * Завершить идею
+     *  
      */
     public function completeIdea(Idea $idea, User $user): Idea
     {
@@ -174,7 +185,7 @@ class IdeaService
     }
 
     /**
-     * Отклонить идею
+     *  
      */
     public function rejectIdea(Idea $idea, User $user): Idea
     {
@@ -184,7 +195,7 @@ class IdeaService
     }
 
     /**
-     * Переместить идею в начало/конец (для сортировки)
+     *    / ( )
      */
     public function reorderIdea(Idea $idea, int $newSortOrder): Idea
     {
@@ -193,7 +204,7 @@ class IdeaService
     }
 
     /**
-     * Получить статистику по статусам (одним запросом)
+     *     ( )
      */
     public function getStatusStatistics(Plan $plan): array
     {
@@ -211,7 +222,7 @@ class IdeaService
     }
 
     /**
-     * Получить статистику по приоритетам (одним запросом)
+     *     ( )
      */
     public function getPriorityStatistics(Plan $plan): array
     {
@@ -229,21 +240,21 @@ class IdeaService
     }
 
     /**
-     * Обновить счетчики в группе и плане
+     *      
      */
     private function updateCounters(IdeaGroup $group): void
     {
-        // Обновить счетчик в группе
+        //    
         $groupCount = $group->ideas()->count();
         $group->update(['idea_count' => $groupCount]);
 
-        // Обновить счетчик в плане
+        //    
         $planCount = $group->plan->ideas()->count();
         $group->plan->update(['idea_count' => $planCount]);
     }
 
     /**
-     * Логировать действие
+     *  
      */
     private function logAction(
         User $user,
@@ -265,7 +276,7 @@ class IdeaService
     }
 
     /**
-     * Получить разницу между старым и новым состоянием
+     *       
      */
     private function getDiff(array $old, array $new): array
     {

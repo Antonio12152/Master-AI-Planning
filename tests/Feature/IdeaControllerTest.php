@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\IdeaController;
 use App\Models\User;
 use App\Models\Plan;
+use App\Models\PlanMember;
 use App\Models\IdeaGroup;
 use App\Models\Idea;
 
@@ -114,6 +115,16 @@ describe('IdeaController', function () {
             expect(Idea::where('text', 'New idea text')->exists())->toBeTrue();
         });
 
+        test('allows creating a short idea text', function () {
+            $response = $this->actingAs($this->user)
+                ->postJson("/api/idea-groups/{$this->group->id}/ideas", [
+                    'text' => 'Ok',
+                ]);
+
+            expect($response->status())->toBe(201);
+            expect(Idea::where('text', 'Ok')->exists())->toBeTrue();
+        });
+
         test('forbids creation when user cannot edit plan', function () {
             $planOther = Plan::factory()->create(['user_id' => $this->otherUser->id]);
             $groupOther = IdeaGroup::factory()->create(['plan_id' => $planOther->id]);
@@ -124,6 +135,25 @@ describe('IdeaController', function () {
                 ]);
 
             expect($response->status())->toBe(403);
+        });
+
+        test('allows creation when user can view the plan', function () {
+            $planShared = Plan::factory()->create(['user_id' => $this->otherUser->id]);
+            $groupShared = IdeaGroup::factory()->create(['plan_id' => $planShared->id]);
+
+            PlanMember::factory()->create([
+                'plan_id' => $planShared->id,
+                'user_id' => $this->user->id,
+                'role' => 'viewer',
+            ]);
+
+            $response = $this->actingAs($this->user)
+                ->postJson("/api/idea-groups/{$groupShared->id}/ideas", [
+                    'text' => 'Shared plan idea',
+                ]);
+
+            expect($response->status())->toBe(201);
+            expect(Idea::where('text', 'Shared plan idea')->exists())->toBeTrue();
         });
 
         test('requires valid idea data', function () {
@@ -186,6 +216,18 @@ describe('IdeaController', function () {
         });
     });
 
+    describe('update()', function () {
+        test('updates idea sort_order when user has permission', function () {
+            $response = $this->actingAs($this->user)
+                ->putJson("/api/ideas/{$this->idea->id}", [
+                    'sort_order' => 7,
+                ]);
+
+            expect($response->status())->toBe(200);
+            expect(Idea::find($this->idea->id)->sort_order)->toBe(7);
+        });
+    });
+
     describe('destroy()', function () {
         test('deletes idea when user has permission', function () {
             $idea = Idea::factory()->create(['group_id' => $this->group->id, 'plan_id' => $this->plan->id]);
@@ -222,8 +264,24 @@ describe('IdeaController', function () {
             expect($response->status())->toBe(200);
             expect(Idea::find($idea->id)->group_id)->toBe($group2->id);
         });
-    // change controller method to move() and route to /api/ideas/{idea}/move
-        test('forbids move to group in different plan', function () {
+
+        test('moves idea to another plan when authorized', function () {
+            $plan2 = Plan::factory()->create(['user_id' => $this->user->id]);
+            $group2 = IdeaGroup::factory()->create(['plan_id' => $plan2->id]);
+            $idea = Idea::factory()->create(['group_id' => $this->group->id, 'plan_id' => $this->plan->id]);
+
+            $response = $this->actingAs($this->user)
+                ->postJson("/api/ideas/{$idea->id}/move", [
+                    'group_id' => $group2->id,
+                ]);
+
+            expect($response->status())->toBe(200);
+            $idea->refresh();
+            expect($idea->group_id)->toBe($group2->id);
+            expect($idea->plan_id)->toBe($plan2->id);
+        });
+
+        test('forbids move to group in a plan the user cannot edit', function () {
             $planOther = Plan::factory()->create(['user_id' => $this->otherUser->id]);
             $groupOther = IdeaGroup::factory()->create(['plan_id' => $planOther->id]);
             $idea = Idea::factory()->create(['group_id' => $this->group->id, 'plan_id' => $this->plan->id]);

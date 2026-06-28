@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// ✅ ОБЯЗАТЕЛЬНЫЕ ИМПОРТЫ ДЛЯ LARAVEL AUTH
+// ✅    LARAVEL AUTH
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -17,7 +17,7 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasApiTokens, HasFactory, Notifiable;
 
     // ============================================================
-    // FILLABLE - какие поля можно массово заполнять
+    // FILLABLE -     
     // ============================================================
     protected $fillable = [
         'name',
@@ -33,7 +33,7 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     // ============================================================
-    // HIDDEN - не показывать в JSON
+    // HIDDEN -    JSON
     // ============================================================
     protected $hidden = [
         'password',
@@ -41,13 +41,13 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     // ============================================================
-    // CASTS - типизация данных (Laravel 11)
+    // CASTS -   (Laravel 11)
     // ============================================================
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed', // ✅ Laravel 11 автоматически хеширует
+            'password' => 'hashed', // ✅ Laravel 11  
             'is_active' => 'boolean',
             'is_verified' => 'boolean',
             'is_admin' => 'boolean',
@@ -58,11 +58,11 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     // ============================================================
-    // SCOPES - удобные запросы
+    // SCOPES -  
     // ============================================================
 
     /**
-     * Получить только активных пользователей
+     *    
      */
     public function scopeActive($query)
     {
@@ -70,7 +70,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Получить только верифицированных пользователей
+     *    
      */
     public function scopeVerified($query)
     {
@@ -78,7 +78,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Получить пользователей по временной зоне
+     *     
      */
     public function scopeInTimezone($query, $timezone)
     {
@@ -86,7 +86,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Получить активных в течение X дней
+     *     X 
      */
     public function scopeRecentlyActive($query, $days = 7)
     {
@@ -94,11 +94,11 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     // ============================================================
-    // RELATIONS - ваши связи
+    // RELATIONS -  
     // ============================================================
 
     /**
-     * Планы, созданные этим пользователем
+     * ,   
      */
     public function plans()
     {
@@ -106,7 +106,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Планы, к которым есть доступ (через plan_members)
+     * ,     ( plan_members)
      */
     public function planMembers()
     {
@@ -114,7 +114,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Все доступные планы (созданные + добавленные)
+     *    ( + )
      */
     public function accessiblePlans()
     {
@@ -125,7 +125,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * API токены пользователя
+     * API  
      */
     public function apiTokens()
     {
@@ -133,7 +133,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Логи активности пользователя
+     *   
      */
     public function activityLogs()
     {
@@ -141,7 +141,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Сессии пользователя
+     *  
      */
     public function sessions()
     {
@@ -149,11 +149,11 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     // ============================================================
-    // CUSTOM METHODS - ваши методы
+    // CUSTOM METHODS -  
     // ============================================================
 
     /**
-     * Проверить, верифицирован ли email пользователя
+     * ,   email 
      * 
      * @return bool
      */
@@ -163,7 +163,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Отметить email как верифицированный
+     *  email  
      * 
      * @return bool
      */
@@ -175,7 +175,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Обновить время последнего входа
+     *    
      * 
      * @return bool
      */
@@ -185,7 +185,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Получить количество доступных планов
+     *    
      * 
      * @return int
      */
@@ -195,7 +195,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Проверить, является ли админом плана
+     * ,    
      * 
      * @param Plan $plan
      * @return bool
@@ -210,7 +210,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Получить роль в плане
+     *    
      * 
      * @param Plan $plan
      * @return string|null
@@ -229,15 +229,15 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     // ============================================================
-    // EVENTS - события жизненного цикла модели
+    // EVENTS -    
     // ============================================================
 
     /**
-     * Запустить при создании новой модели
+     *     
      */
     protected static function booted(): void
     {
-        // При создании пользователя, установить is_verified в false
+        //   ,  is_verified  false
         static::creating(function ($user) {
             if (!isset($user->is_verified)) {
                 $user->is_verified = false;

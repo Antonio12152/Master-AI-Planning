@@ -14,13 +14,13 @@ class PlanMemberSeeder extends Seeder
         $users = User::all();
 
         Plan::all()->each(function (Plan $plan) use ($users) {
-            // Владелец плана автоматически админ
+            //    
             PlanMember::firstOrCreate(
                 ['plan_id' => $plan->id, 'user_id' => $plan->user_id],
                 ['role' => 'admin']
             );
 
-            // Добавить 2-4 случайных пользователей к плану
+            //  2-4    
             $memberCount = rand(2, 4);
             $randomUsers = $users->random(min($memberCount, $users->count()));
 

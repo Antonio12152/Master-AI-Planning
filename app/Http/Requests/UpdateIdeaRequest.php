@@ -10,8 +10,21 @@ class UpdateIdeaRequest extends FormRequest
     {
         $idea = $this->route('idea');
         
-        // Проверить, может ли пользователь редактировать эту идею
-        return $idea && $idea->plan->canEdit($this->user());
+        // ,      
+            if (!$idea) {
+                return false;
+            }
+
+            // Allow users who can view the plan to update only the sort_order (used for drag-reorder).
+            $inputKeys = array_keys($this->all());
+            $onlySortOrder = count($inputKeys) === 1 && in_array('sort_order', $inputKeys, true);
+
+            if ($onlySortOrder) {
+                return $idea->plan->canView($this->user());
+            }
+
+            // Otherwise require edit permission
+            return $idea->plan->canEdit($this->user());
     }
 
     public function rules(): array
@@ -20,7 +33,7 @@ class UpdateIdeaRequest extends FormRequest
             'text' => [
                 'sometimes',
                 'string',
-                'min:3',
+                'min:1',
                 'max:500',
             ],
             'description' => [
@@ -45,11 +58,17 @@ class UpdateIdeaRequest extends FormRequest
                 'sometimes',
                 'nullable',
                 'array',
-                'max:10', // Максимум 10 тегов
+                'max:10', //  10 
             ],
             'tags.*' => [
                 'string',
                 'max:50',
+            ],
+            'sort_order' => [
+                'sometimes',
+                'nullable',
+                'integer',
+                'min:0',
             ],
         ];
     }
