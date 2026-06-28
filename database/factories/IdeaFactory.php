@@ -24,7 +24,7 @@ class IdeaFactory extends Factory
             'status' => fake()->randomElement($statuses),
             'priority' => fake()->randomElement([0, 1, 2, 3]),
             'tags' => fake()->randomElements($tagsList, fake()->numberBetween(0, 3)),
-            'sort_order' => fake()->numberBetween(0, 100),
+            'sort_order' => 0,
             'completed_at' => fake()->boolean(30) ? fake()->dateTime() : null,
         ];
     }

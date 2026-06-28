@@ -11,11 +11,17 @@ class IdeaGroupSeeder extends Seeder
     public function run(): void
     {
         Plan::all()->each(function (Plan $plan) {
-            //    2-5 
+            // Create 2-5 groups per plan
             $groupCount = rand(2, 5);
             
-            IdeaGroup::factory($groupCount)
-                ->create(['plan_id' => $plan->id]);
+            // Create groups with sequential sort_order within the plan
+            for ($i = 0; $i < $groupCount; $i++) {
+                IdeaGroup::factory()
+                    ->create([
+                        'plan_id' => $plan->id,
+                        'sort_order' => $i,
+                    ]);
+            }
         });
 
         $this->command->info('✅ Idea Groups seeded: ' . IdeaGroup::count());

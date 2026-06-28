@@ -63,6 +63,10 @@ class Idea extends Model
         return $query->where('priority', $priority);
     }
 
+    /**
+     * Order ideas by sort_order (group-scoped).
+     * Should be used after filtering by group, e.g., $group->ideas()->ordered()
+     */
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order');

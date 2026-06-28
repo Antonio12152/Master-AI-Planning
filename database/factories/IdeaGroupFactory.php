@@ -15,8 +15,8 @@ class IdeaGroupFactory extends Factory
             'plan_id' => Plan::factory(),
             'name' => fake()->words(2, true),
             'description' => fake()->paragraph(),
-            'sort_order' => fake()->numberBetween(0, 100),
-            'idea_count' => fake()->numberBetween(0, 20),
+            'sort_order' => 0,
+            'idea_count' => 0,
             'color' => fake()->randomElement($colors),
         ];
     }
