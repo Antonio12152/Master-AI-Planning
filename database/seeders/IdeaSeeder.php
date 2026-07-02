@@ -23,6 +23,14 @@ class IdeaSeeder extends Seeder
                         'sort_order' => $i,
                     ]);
             }
+
+            $group->update(['idea_count' => $ideaCount]);
+        });
+
+        // Update plan idea counts after all ideas are created
+        IdeaGroup::with('plan')->get()->groupBy('plan_id')->each(function ($groups, $planId) {
+            $plan = $groups->first()->plan;
+            $plan->update(['idea_count' => $plan->ideas()->count()]);
         });
 
         $this->command->info('✅ Ideas seeded: ' . Idea::count());

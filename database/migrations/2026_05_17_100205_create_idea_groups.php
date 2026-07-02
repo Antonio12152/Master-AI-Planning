@@ -24,6 +24,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index('plan_id');
+            $table->index(['plan_id', 'sort_order']);
         });
     }
 

@@ -32,6 +32,7 @@ return new class extends Migration
             $table->index('plan_id');
             $table->index('group_id');
             $table->index(['plan_id', 'group_id']);
+            $table->index(['group_id', 'sort_order']);
             $table->index('created_at');
         });
     }

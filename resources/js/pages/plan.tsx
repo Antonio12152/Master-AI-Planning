@@ -228,11 +228,13 @@ export default function PlanDetailPage(): JSX.Element {
         try {
             setSavingGroupId(-1);
             const newGroup = await createIdeaGroup(planId, data);
-            setIdeaGroups([...ideaGroups, { 
-                ...newGroup, 
-                ideas: [],
-                sort_order: ideaGroups.length,
-            }]);
+            setIdeaGroups([
+                ...ideaGroups,
+                {
+                    ...newGroup,
+                    ideas: [],
+                },
+            ]);
             setShowGroupModal(false);
         } catch (err) {
             setError('Failed to create group');

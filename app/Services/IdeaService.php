@@ -17,14 +17,15 @@ class IdeaService
      */
     public function createIdea(IdeaGroup $group, array $data, User $user): Idea
     {
+        $nextSortOrder = $data['sort_order'] ?? (($group->ideas()->max('sort_order') ?? -1) + 1);
+
         $idea = $group->ideas()->create(array_merge($data, [
             'plan_id' => $group->plan_id,
+            'sort_order' => $nextSortOrder,
         ]));
 
-        //  
         $this->updateCounters($group);
 
-        // 
         $this->logAction($user, $group->plan_id, 'created_idea', 'idea', $idea->id);
 
         return $idea;
@@ -82,12 +83,14 @@ class IdeaService
         $oldGroup = $idea->group;
         $oldPlanId = $idea->plan_id;
 
+        $newSortOrder = ($newGroup->ideas()->max('sort_order') ?? -1) + 1;
+
         $idea->update([
             'group_id' => $newGroup->id,
             'plan_id' => $newGroup->plan_id,
+            'sort_order' => $newSortOrder,
         ]);
 
-        //     ,   , / 
         $this->updateCounters($oldGroup);
         $this->updateCounters($newGroup);
 
