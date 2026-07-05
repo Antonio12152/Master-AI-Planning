@@ -27,17 +27,17 @@ class AdminController extends Controller
 
         // Filter by active status
         if ($request->has('is_active')) {
-            $query->where('is_active', (bool) $request->input('is_active'));
+            $query->where('is_active', $request->boolean('is_active'));
         }
 
         // Filter by verified status
         if ($request->has('is_verified')) {
-            $query->where('is_verified', (bool) $request->input('is_verified'));
+            $query->where('is_verified', $request->boolean('is_verified'));
         }
 
         // Filter by admin status
         if ($request->has('is_admin')) {
-            $query->where('is_admin', (bool) $request->input('is_admin'));
+            $query->where('is_admin', $request->boolean('is_admin'));
         }
 
         // Search by name or email

@@ -1,10 +1,7 @@
 <?php
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-
-uses(RefreshDatabase::class);
 
 describe('AdminController', function () {
     beforeEach(function () {
