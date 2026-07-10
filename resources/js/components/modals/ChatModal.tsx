@@ -1,5 +1,6 @@
 import React, { JSX, useState, useRef, useEffect } from 'react';
 import { X, Send, Loader, Check, CheckCircle, MessageCircle } from 'lucide-react';
+import { chatWithPlanAi } from '@/lib/api';
 import type { PlanDetail, IdeaGroup } from '@/types/ideas';
 
 interface Message {
@@ -77,7 +78,6 @@ export default function AIChatModal({
     const handleSendMessage = async () => {
         if (!inputValue.trim()) return;
 
-        // Add user message
         const userMessage: Message = {
             id: Date.now().toString(),
             role: 'user',
@@ -89,36 +89,32 @@ export default function AIChatModal({
         setInputValue('');
         setIsLoading(true);
 
-        // Simulate API call to Claude
-        setTimeout(() => {
-            const selectedGroups = ideaGroups.filter((g) => selectedGroupIds.includes(g.id));
-            const context = {
-                plan: {
-                    id: plan.id,
-                    name: plan.name,
-                    description: plan.description,
-                },
-                selectedGroups:
-                    selectedGroupIds.length === 0
-                        ? []
-                        : selectedGroups.map((g) => ({
-                            id: g.id,
-                            name: g.name,
-                            ideasCount: g.ideas.length,
-                        })),
-            };
+        try {
+            const response = await chatWithPlanAi(plan.id, {
+                message: userMessage.content,
+                selected_group_ids: selectedGroupIds,
+            });
 
-            // This would be replaced with actual API call
             const assistantMessage: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
-                content: `I'll help you with that! Based on the context of "${plan.name}" ${selectedGroupIds.length === 0 ? '(no specific groups selected)' : `and the ${selectedGroupIds.length === ideaGroups.length ? 'all' : selectedGroupIds.length} selected group(s)`}, here's what I can do:\n\n1. Provide insights on your ideas\n2. Suggest improvements\n3. Help prioritize tasks\n4. Generate new ideas\n\nWhat would you like to focus on?`,
+                content: response.message || 'The AI assistant did not return a message.',
                 timestamp: new Date(),
             };
 
             setMessages((prev) => [...prev, assistantMessage]);
+        } catch (error) {
+            const assistantMessage: Message = {
+                id: (Date.now() + 2).toString(),
+                role: 'assistant',
+                content: 'The AI assistant could not be reached. Please check your AI endpoint configuration.',
+                timestamp: new Date(),
+            };
+
+            setMessages((prev) => [...prev, assistantMessage]);
+        } finally {
             setIsLoading(false);
-        }, 500);
+        }
     };
 
     return (
@@ -262,10 +258,10 @@ export default function AIChatModal({
                                         type="text"
                                         value={inputValue}
                                         onChange={(e) => setInputValue(e.target.value)}
-                                        onKeyPress={(e) => {
+                                        onKeyDown={(e) => {
                                             if (e.key === 'Enter' && !e.shiftKey) {
                                                 e.preventDefault();
-                                                handleSendMessage();
+                                                void handleSendMessage();
                                             }
                                         }}
                                         placeholder="Ask me anything..."

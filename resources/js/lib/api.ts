@@ -279,3 +279,12 @@ export async function reorderIdeas(ideas: Array<{ id: number; [key: string]: any
         throw error;
     }
 }
+export async function chatWithPlanAi(planId: number, data: { message: string; selected_group_ids?: number[] }) {
+    try {
+        const response = await axiosInstance.post(`/plans/${planId}/ai/chat`, data);
+        return response.data;
+    } catch (error) {
+        console.error('Failed to chat with AI:', error);
+        throw error;
+    }
+}

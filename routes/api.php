@@ -22,10 +22,15 @@ Route::middleware([
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // AI settings endpoints
+    Route::get('/ai-settings', [\App\Http\Controllers\Api\AiSettingsController::class, 'show'])->name('ai-settings.show');
+    Route::put('/ai-settings', [\App\Http\Controllers\Api\AiSettingsController::class, 'update'])->name('ai-settings.update');
+
     // Plans endpoints
     Route::apiResource('plans', PlanController::class);
     Route::post('/plans/{plan}/members', [PlanController::class, 'addMember'])->name('plans.addMember');
     Route::delete('/plans/{plan}/members/{user}', [PlanController::class, 'removeMember'])->name('plans.removeMember');
+    Route::post('/plans/{plan}/ai/chat', [PlanController::class, 'chat'])->name('plans.ai.chat');
 
     // Ideas endpoints - by plan
     Route::get('/plans/{plan}/ideas', [IdeaController::class, 'indexByPlan'])->name('plans.ideas.index');

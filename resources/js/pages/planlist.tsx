@@ -273,11 +273,15 @@ export default function MainPlanPage(): JSX.Element {
                                                     </p>
 
                                                     {/* Meta Information */}
-                                                    <div className="flex items-center gap-4 text-sm text-slate-500">
+                                                    <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500">
                                                         <div className="flex items-center gap-1">
                                                             <Lightbulb size={16} />
                                                             {plan.idea_count} idea
                                                             {plan.idea_count !== 1 ? 's' : ''}
+                                                        </div>
+                                                        <div className="flex items-center gap-1">
+                                                            <Clock size={16} />
+                                                            Created {formatDate(plan.created_at)}
                                                         </div>
                                                         <div className="flex items-center gap-1">
                                                             <Clock size={16} />

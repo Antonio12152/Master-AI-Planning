@@ -8,14 +8,17 @@ use App\Http\Requests\UpdatePlanRequest;
 use App\Http\Requests\AddPlanMemberRequest;
 use App\Models\Plan;
 use App\Models\User;
+use App\Services\AiChatService;
 use App\Services\PlanService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class PlanController extends Controller
 {
-    public function __construct(private PlanService $planService)
-    {
+    public function __construct(
+        private PlanService $planService,
+        private AiChatService $aiChatService,
+    ) {
     }
 
     public function index(Request $request): JsonResponse
@@ -191,5 +194,36 @@ class PlanController extends Controller
         $plan = $this->planService->unarchivePlan($plan, $request->user());
 
         return response()->json($plan);
+    }
+
+    public function chat(Request $request, Plan $plan): JsonResponse
+    {
+        if (!$plan->canView($request->user())) {
+            return response()->json([
+                'message' => 'No access to this plan'
+            ], 403);
+        }
+
+        $data = $request->validate([
+            'message' => ['required', 'string', 'max:4000'],
+            'selected_group_ids' => ['nullable', 'array'],
+            'selected_group_ids.*' => ['integer', 'exists:idea_groups,id'],
+        ]);
+
+        try {
+            $response = $this->aiChatService->chat(
+                $plan,
+                $data['message'],
+                $data['selected_group_ids'] ?? [],
+                $request->user()
+            );
+
+            return response()->json($response);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'AI chat is not available right now.',
+                'error' => $e->getMessage(),
+            ], 502);
+        }
     }
 }

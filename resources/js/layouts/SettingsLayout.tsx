@@ -4,7 +4,7 @@ import SettingsSidebar from '@/components/SettingsSidebar';
 
 interface SettingsLayoutProps {
     children: React.ReactNode;
-    currentPage?: 'profile' | 'security' | 'appearance';
+    currentPage?: 'profile' | 'security' | 'appearance' | 'ai';
 }
 
 export default function SettingsLayout({ children, currentPage = 'profile' }: SettingsLayoutProps) {

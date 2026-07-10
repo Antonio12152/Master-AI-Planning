@@ -113,6 +113,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(PlanMember::class);
     }
 
+    public function aiSettings()
+    {
+        return $this->hasOne(AiSettings::class);
+    }
+
     /**
      *    ( + )
      */

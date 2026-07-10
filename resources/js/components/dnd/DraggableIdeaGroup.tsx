@@ -158,7 +158,7 @@ const IdeaItem = memo(function IdeaItem({
             {/* Footer      */}
             <div className="flex items-center justify-between gap-2">
                 <span className="text-xs text-slate-500 flex-shrink-0">
-                    {formatDateShort(idea.created_at)}
+                    Created {formatDateShort(idea.created_at)}
                 </span>
                 <button
                     onClick={(e) => {

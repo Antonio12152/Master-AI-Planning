@@ -1,4 +1,5 @@
-import React, { JSX } from 'react';
+import type { JSX } from 'react';
+import { CookieConsentLink } from '@/components/cookie-consent-link';
 
 export default function Footer(): JSX.Element {
     return (
@@ -48,9 +49,10 @@ export default function Footer(): JSX.Element {
 
                 {/* Divider */}
                 <div className="border-t border-slate-700 pt-8">
-                    <p className="text-center text-slate-400 text-sm">
-                        &copy; 2024 Master AI Planning. All rights reserved.
-                    </p>
+                    <div className="flex flex-col items-center justify-center gap-2 text-center text-sm text-slate-400 sm:flex-row sm:gap-4">
+                        <p>&copy; 2024 Master AI Planning. All rights reserved.</p>
+                        <CookieConsentLink />
+                    </div>
                 </div>
             </div>
         </footer>

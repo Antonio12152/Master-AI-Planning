@@ -1,12 +1,12 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
-import { User, Shield, Palette } from 'lucide-react';
+import { User, Shield, Palette, Sparkles } from 'lucide-react';
 import { edit as profileEdit } from '@/routes/profile';
 import { edit as securityEdit } from '@/routes/security';
 import { edit as appearanceEdit } from '@/routes/appearance';
 
 interface SettingsSidebarProps {
-    currentPage?: 'profile' | 'security' | 'appearance';
+    currentPage?: 'profile' | 'security' | 'appearance' | 'ai';
 }
 
 export default function SettingsSidebar({ currentPage = 'profile' }: SettingsSidebarProps) {
@@ -14,6 +14,7 @@ export default function SettingsSidebar({ currentPage = 'profile' }: SettingsSid
         { name: 'Profile', href: profileEdit().url, page: 'profile', icon: User },
         { name: 'Security', href: securityEdit().url, page: 'security', icon: Shield },
         { name: 'Appearance', href: appearanceEdit().url, page: 'appearance', icon: Palette },
+        { name: 'AI', href: '/settings/ai', page: 'ai', icon: Sparkles },
     ];
 
     return (
