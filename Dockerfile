@@ -8,14 +8,11 @@ ENV PORT=8080
 
 WORKDIR /var/www/html
 
-COPY composer.json composer.lock ./
+COPY . .
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
     && composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
 
-COPY package*.json ./
 RUN npm install
-
-COPY . .
 RUN npm run build
 
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
