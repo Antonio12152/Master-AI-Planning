@@ -1,7 +1,7 @@
 app = "master-ai-planning"
 
 [build]
-  image = "Dockerfile"
+  dockerfile = "Dockerfile"
 
 [env]
   APP_ENV = "production"
@@ -11,6 +11,14 @@ app = "master-ai-planning"
   CACHE_DRIVER = "array"
   SESSION_DRIVER = "array"
   QUEUE_CONNECTION = "database"
+  PORT = "8080"
 
-[experimental]
-  allowed_public_ports = [8080]
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 80
+
+  [[services.ports]]
+    port = 443
