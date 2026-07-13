@@ -1,0 +1,16 @@
+app = "master-ai-planning"
+
+[build]
+  image = "Dockerfile"
+
+[env]
+  APP_ENV = "production"
+  APP_DEBUG = "false"
+  APP_URL = "https://master-ai-planning.fly.dev"
+  DB_CONNECTION = "pgsql"
+  CACHE_DRIVER = "array"
+  SESSION_DRIVER = "array"
+  QUEUE_CONNECTION = "database"
+
+[experimental]
+  allowed_public_ports = [8080]
