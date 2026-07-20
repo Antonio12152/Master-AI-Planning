@@ -6,7 +6,7 @@ app = "master-ai-planning"
 [env]
   APP_ENV = "production"
   APP_DEBUG = "false"
-  APP_URL = "https://master-ai-planning.fly.dev"
+  INERTIA_SSR_ENABLED = "false"
   DB_CONNECTION = "pgsql"
   CACHE_DRIVER = "array"
   SESSION_DRIVER = "array"
@@ -23,4 +23,4 @@ app = "master-ai-planning"
 
   [[services.ports]]
     port = 443
-    handlers = ["http"]
+    handlers = ["tls", "http"]
