@@ -28,14 +28,21 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
 
         if ($this->app->environment('production')) {
-            $appUrl = env('APP_URL') ?: request()->getScheme().'://'.request()->getHost();
-            $appUrl = rtrim($appUrl, '/');
+            $appUrl = env('APP_URL');
 
-            config(['app.url' => $appUrl]);
-            config(['app.asset_url' => $appUrl]);
-            config(['filesystems.disks.public.url' => $appUrl.'/storage']);
-            URL::forceRootUrl($appUrl);
-            URL::forceScheme(parse_url($appUrl, PHP_URL_SCHEME) ?: 'https');
+            if (! $appUrl && ! app()->runningInConsole() && request()->headers->has('host')) {
+                $appUrl = request()->getScheme().'://'.request()->getHost();
+            }
+
+            if ($appUrl) {
+                $appUrl = rtrim($appUrl, '/');
+
+                config(['app.url' => $appUrl]);
+                config(['app.asset_url' => $appUrl]);
+                config(['filesystems.disks.public.url' => $appUrl.'/storage']);
+                URL::forceRootUrl($appUrl);
+                URL::forceScheme(parse_url($appUrl, PHP_URL_SCHEME) ?: 'https');
+            }
 
             Request::setTrustedProxies(
                 ['0.0.0.0/0', '::/0'],

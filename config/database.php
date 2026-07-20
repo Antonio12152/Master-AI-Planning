@@ -3,6 +3,31 @@
 use Illuminate\Support\Str;
 use Pdo\Mysql;
 
+if (! function_exists('database_certificate_path')) {
+    function database_certificate_path(?string $value, string $filename): ?string
+    {
+        if (! $value) {
+            return null;
+        }
+
+        if (str_contains($value, '-----BEGIN CERTIFICATE-----')) {
+            $path = storage_path("ssl/{$filename}");
+
+            if (! is_dir(dirname($path))) {
+                mkdir(dirname($path), 0777, true);
+            }
+
+            if (! file_exists($path) || file_get_contents($path) !== $value) {
+                file_put_contents($path, $value);
+            }
+
+            return $path;
+        }
+
+        return trim($value);
+    }
+}
+
 return [
 
     /*
@@ -111,9 +136,9 @@ return [
             'prefix_indexes' => true,
             'schema' => 'public',
             'sslmode' => env('DB_SSLMODE', 'require'),
-            'sslcert' => env('DB_SSLCERT'),
-            'sslkey' => env('DB_SSLKEY'),
-            'sslrootcert' => env('DB_SSLROOTCERT'),
+            'sslcert' => database_certificate_path(env('DB_SSLCERT'), 'pgsql_client.crt'),
+            'sslkey' => database_certificate_path(env('DB_SSLKEY'), 'pgsql_client.key'),
+            'sslrootcert' => database_certificate_path(env('DB_SSLROOTCERT'), 'pgsql_root.crt'),
         ],
         'sqlsrv' => [
             'driver' => 'sqlsrv',
