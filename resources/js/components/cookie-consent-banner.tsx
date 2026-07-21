@@ -55,6 +55,9 @@ export function CookieConsentBanner() {
                     timestamp: stored.timestamp,
                 });
                 setHasDecision(true);
+            } else {
+                setPreferences(getDefaultCookieConsentPreferences());
+                setHasDecision(false);
             }
         };
 
@@ -143,88 +146,90 @@ export function CookieConsentBanner() {
             : 'You have declined optional cookies.';
     }, [hasDecision, preferences.analytics, preferences.preferences]);
 
-    if (hasDecision) {
-        return null;
-    }
-
     return (
-        <div className={bannerClasses}>
-            <div className="mx-auto flex flex-col gap-4 md:max-w-7xl md:flex-row md:items-end md:justify-between">
-                <div className="max-w-3xl space-y-2">
-                    <p className="text-sm font-semibold text-white">We value your privacy</p>
-                    <p className="text-sm text-slate-300">
-                        {summary}{' '}
-                        <span className="text-slate-400">You can review and change your choices at any time.</span>
-                    </p>
-                </div>
+        <>
+            {!hasDecision && (
+                <div className={bannerClasses}>
+                    <div className="mx-auto flex flex-col gap-4 md:max-w-7xl md:flex-row md:items-end md:justify-between">
+                        <div className="max-w-3xl space-y-2">
+                            <p className="text-sm font-semibold text-white">We value your privacy</p>
+                            <p className="text-sm text-slate-300">
+                                {summary}{' '}
+                                <span className="text-slate-400">You can review and change your choices at any time.</span>
+                            </p>
+                        </div>
 
-                <div className="flex flex-col gap-2 sm:flex-row">
-                    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                        <DialogTrigger asChild>
-                            <Button variant="ghost" className="border border-slate-700 bg-slate-900/70 text-slate-100 hover:bg-slate-800">
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                            <button
+                                type="button"
+                                onClick={() => setIsOpen(true)}
+                                className="inline-flex items-center justify-center rounded-md border border-slate-700 bg-slate-900/70 px-4 py-2 text-sm font-medium text-slate-100 transition hover:bg-slate-800"
+                            >
                                 Customize
+                            </button>
+                            <Button onClick={handleAcceptAll}>Accept all</Button>
+                            <Button variant="outline" onClick={handleDeclineAll}>
+                                Decline all
                             </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-xl">
-                            <DialogHeader>
-                                <DialogTitle>Cookie preferences</DialogTitle>
-                                <DialogDescription>
-                                    Choose which optional cookies you allow. Necessary cookies are always enabled because they keep the service functioning.
-                                </DialogDescription>
-                            </DialogHeader>
-
-                            <div className="space-y-4 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-                                <div className="flex items-start justify-between gap-4 rounded-md bg-slate-50 p-3 dark:bg-slate-900/60">
-                                    <div>
-                                        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Necessary cookies</p>
-                                        <p className="text-sm text-slate-600 dark:text-slate-400">Required for authentication, security, and basic site functionality.</p>
-                                    </div>
-                                    <Checkbox checked disabled />
-                                </div>
-
-                                <div className="flex items-start justify-between gap-4 rounded-md bg-slate-50 p-3 dark:bg-slate-900/60">
-                                    <div>
-                                        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Analytics cookies</p>
-                                        <p className="text-sm text-slate-600 dark:text-slate-400">Help us understand feature usage and improve the experience.</p>
-                                    </div>
-                                    <Checkbox
-                                        checked={preferences.analytics}
-                                        onCheckedChange={(checked) => updatePreference('analytics', checked === true)}
-                                    />
-                                </div>
-
-                                <div className="flex items-start justify-between gap-4 rounded-md bg-slate-50 p-3 dark:bg-slate-900/60">
-                                    <div>
-                                        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Preference cookies</p>
-                                        <p className="text-sm text-slate-600 dark:text-slate-400">Remember your theme, dashboard preferences, and other choices.</p>
-                                    </div>
-                                    <Checkbox
-                                        checked={preferences.preferences}
-                                        onCheckedChange={(checked) => updatePreference('preferences', checked === true)}
-                                    />
-                                </div>
-                            </div>
-
-                            <DialogFooter className="gap-2 sm:justify-between">
-                                <Button variant="outline" onClick={handleDeclineAll}>
-                                    Decline all
-                                </Button>
-                                <div className="flex gap-2">
-                                    <Button variant="ghost" onClick={() => setIsOpen(false)}>
-                                        Close
-                                    </Button>
-                                    <Button onClick={handleSavePreferences}>Save preferences</Button>
-                                </div>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-
-                    <Button onClick={handleAcceptAll}>Accept all</Button>
-                    <Button variant="outline" onClick={handleDeclineAll}>
-                        Decline all
-                    </Button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
+            )}
+
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                <DialogContent className="sm:max-w-xl">
+                    <DialogHeader>
+                        <DialogTitle>Cookie preferences</DialogTitle>
+                        <DialogDescription>
+                            Choose which optional cookies you allow. Necessary cookies are always enabled because they keep the service functioning.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
+                        <div className="flex items-start justify-between gap-4 rounded-md bg-slate-50 p-3 dark:bg-slate-900/60">
+                            <div>
+                                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Necessary cookies</p>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">Required for authentication, security, and basic site functionality.</p>
+                            </div>
+                            <Checkbox checked disabled />
+                        </div>
+
+                        <div className="flex items-start justify-between gap-4 rounded-md bg-slate-50 p-3 dark:bg-slate-900/60">
+                            <div>
+                                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Analytics cookies</p>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">Help us understand feature usage and improve the experience.</p>
+                            </div>
+                            <Checkbox
+                                checked={preferences.analytics}
+                                onCheckedChange={(checked) => updatePreference('analytics', checked === true)}
+                            />
+                        </div>
+
+                        <div className="flex items-start justify-between gap-4 rounded-md bg-slate-50 p-3 dark:bg-slate-900/60">
+                            <div>
+                                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Preference cookies</p>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">Remember your theme, dashboard preferences, and other choices.</p>
+                            </div>
+                            <Checkbox
+                                checked={preferences.preferences}
+                                onCheckedChange={(checked) => updatePreference('preferences', checked === true)}
+                            />
+                        </div>
+                    </div>
+
+                    <DialogFooter className="gap-2 sm:justify-between">
+                        <Button variant="outline" onClick={handleDeclineAll}>
+                            Decline all
+                        </Button>
+                        <div className="flex gap-2">
+                            <Button variant="ghost" onClick={() => setIsOpen(false)}>
+                                Close
+                            </Button>
+                            <Button onClick={handleSavePreferences}>Save preferences</Button>
+                        </div>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </>
     );
 }

@@ -28,11 +28,8 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
 
         if ($this->app->environment('production')) {
-            $appUrl = env('APP_URL');
-
-            if (! $appUrl && ! app()->runningInConsole() && request()->headers->has('host')) {
-                $appUrl = request()->getScheme().'://'.request()->getHost();
-            }
+            $request = app()->runningInConsole() ? null : request();
+            $appUrl = $this->resolveAppUrl($request);
 
             if ($appUrl) {
                 $appUrl = rtrim($appUrl, '/');
@@ -44,6 +41,10 @@ class AppServiceProvider extends ServiceProvider
                 URL::forceScheme(parse_url($appUrl, PHP_URL_SCHEME) ?: 'https');
             }
 
+            if ($request) {
+                $this->configureSanctumStatefulDomains($request, $appUrl);
+            }
+
             Request::setTrustedProxies(
                 ['0.0.0.0/0', '::/0'],
                 Request::HEADER_X_FORWARDED_FOR
@@ -52,6 +53,72 @@ class AppServiceProvider extends ServiceProvider
                     | Request::HEADER_X_FORWARDED_PROTO
             );
         }
+    }
+
+    protected function resolveAppUrl(?Request $request): ?string
+    {
+        if ($request === null) {
+            return env('APP_URL');
+        }
+
+        $configuredUrl = env('APP_URL');
+        $isSecureRequest = $this->requestIsSecure($request);
+        $scheme = $isSecureRequest ? 'https' : ($configuredUrl ? parse_url($configuredUrl, PHP_URL_SCHEME) : $request->getScheme());
+
+        if ($configuredUrl) {
+            $parsedUrl = parse_url($configuredUrl);
+            $host = $request->getHost() ?: ($parsedUrl['host'] ?? null);
+            $port = $request->getPort() ?: ($parsedUrl['port'] ?? null);
+            $appUrl = $scheme.'://'.$host;
+
+            if ($port !== null && $port !== 80 && $port !== 443) {
+                $appUrl .= ':'.$port;
+            }
+
+            return $appUrl;
+        }
+
+        if ($request->getHost()) {
+            return $scheme.'://'.$request->getHost();
+        }
+
+        return null;
+    }
+
+    protected function requestIsSecure(Request $request): bool
+    {
+        $forwardedProto = $request->headers->get('X-Forwarded-Proto');
+
+        if (is_string($forwardedProto) && $forwardedProto !== '') {
+            return str_contains($forwardedProto, 'https');
+        }
+
+        return $request->isSecure();
+    }
+
+    protected function configureSanctumStatefulDomains(Request $request, ?string $appUrl): void
+    {
+        $domains = config('sanctum.stateful', []);
+        $hosts = [];
+
+        foreach ($domains as $domain) {
+            $hosts[] = trim($domain);
+        }
+
+        if ($request->getHost()) {
+            $hosts[] = $request->getHost();
+        }
+
+        if ($appUrl) {
+            $parsed = parse_url($appUrl);
+            if (! empty($parsed['host'])) {
+                $hosts[] = $parsed['host'];
+            }
+        }
+
+        $hosts = array_values(array_unique(array_filter($hosts)));
+
+        config(['sanctum.stateful' => $hosts]);
     }
 
     /**

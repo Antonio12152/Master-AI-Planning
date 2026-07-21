@@ -82,6 +82,7 @@ export function initializeTheme(): void {
 
     currentAppearance = getStoredAppearance();
     applyTheme(currentAppearance);
+    notify();
 
     // Set up system theme change listener
     mediaQuery()?.addEventListener('change', handleSystemThemeChange);

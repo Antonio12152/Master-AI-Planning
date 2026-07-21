@@ -7,10 +7,22 @@ if (! function_exists('database_certificate_path')) {
     function database_certificate_path(?string $value, string $filename): ?string
     {
         if (! $value) {
+            $defaultPath = storage_path("ssl/{$filename}");
+
+            if ($filename === 'pgsql_root.crt' && file_exists(storage_path('ssl/ca.pem'))) {
+                return storage_path('ssl/ca.pem');
+            }
+
+            return file_exists($defaultPath) ? $defaultPath : null;
+        }
+
+        $value = trim($value);
+
+        if ($value === '') {
             return null;
         }
 
-        if (str_contains($value, '-----BEGIN CERTIFICATE-----')) {
+        if (str_contains($value, '-----BEGIN CERTIFICATE-----') || str_contains($value, '-----BEGIN PRIVATE KEY-----')) {
             $path = storage_path("ssl/{$filename}");
 
             if (! is_dir(dirname($path))) {
@@ -24,7 +36,23 @@ if (! function_exists('database_certificate_path')) {
             return $path;
         }
 
-        return trim($value);
+        if (str_contains($value, '-----BEGIN') || str_contains($value, '-----END')) {
+            return null;
+        }
+
+        if (str_starts_with($value, '/') || str_starts_with($value, '.') || str_contains($value, DIRECTORY_SEPARATOR)) {
+            if (file_exists($value)) {
+                return $value;
+            }
+
+            if (file_exists(base_path($value))) {
+                return base_path($value);
+            }
+
+            return null;
+        }
+
+        return $value;
     }
 }
 
