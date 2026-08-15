@@ -50,7 +50,7 @@ export default function Footer(): JSX.Element {
                 {/* Divider */}
                 <div className="border-t border-slate-700 pt-8">
                     <div className="flex flex-col items-center justify-center gap-2 text-center text-sm text-slate-400 sm:flex-row sm:gap-4">
-                        <p>&copy; 2024 Master AI Planning. All rights reserved.</p>
+                        <p>&copy; 2026 Master AI Planning. All rights reserved.</p>
                         <CookieConsentLink />
                     </div>
                 </div>

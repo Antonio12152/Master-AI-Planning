@@ -206,6 +206,86 @@ class IdeaService
         return $idea;
     }
 
+    public function batchReorderPlan(Plan $plan, array $groups): void
+    {
+        $groupIds = [];
+        $ideaIds = [];
+        $groupSortCases = [];
+        $groupCountCases = [];
+        $ideaSortCases = [];
+        $ideaGroupCases = [];
+
+        foreach ($groups as $group) {
+            $groupId = (int) $group['id'];
+            $groupIds[] = $groupId;
+            $groupSortCases[$groupId] = (int) $group['sort_order'];
+            $groupCountCases[$groupId] = count($group['ideas'] ?? []);
+
+            foreach ($group['ideas'] as $idea) {
+                $ideaId = (int) $idea['id'];
+                $ideaIds[] = $ideaId;
+                $ideaSortCases[$ideaId] = (int) $idea['sort_order'];
+                $ideaGroupCases[$ideaId] = $groupId;
+            }
+        }
+
+        $groupIds = array_values(array_unique($groupIds));
+        $ideaIds = array_values(array_unique($ideaIds));
+
+        $existingGroupCount = $plan->ideaGroups()->whereIn('id', $groupIds)->count();
+        if ($existingGroupCount !== count($groupIds)) {
+            throw new \InvalidArgumentException('Invalid group IDs for this plan.');
+        }
+
+        $existingIdeaCount = Idea::whereIn('id', $ideaIds)
+            ->where('plan_id', $plan->id)
+            ->count();
+
+        if ($existingIdeaCount !== count($ideaIds)) {
+            throw new \InvalidArgumentException('Invalid idea IDs for this plan.');
+        }
+
+        DB::transaction(function () use (
+            $groupIds,
+            $groupSortCases,
+            $groupCountCases,
+            $ideaIds,
+            $ideaSortCases,
+            $ideaGroupCases
+        ) {
+            if (!empty($groupIds)) {
+                $groupSortSql = $this->buildCaseSql($groupSortCases, 'sort_order');
+                $groupCountSql = $this->buildCaseSql($groupCountCases, 'idea_count');
+
+                DB::update(
+                    "UPDATE idea_groups SET sort_order = {$groupSortSql}, idea_count = {$groupCountSql} WHERE id IN (" .
+                    implode(',', $groupIds) . ')' 
+                );
+            }
+
+            if (!empty($ideaIds)) {
+                $ideaSortSql = $this->buildCaseSql($ideaSortCases, 'sort_order');
+                $ideaGroupSql = $this->buildCaseSql($ideaGroupCases, 'group_id');
+
+                DB::update(
+                    "UPDATE ideas SET sort_order = {$ideaSortSql}, group_id = {$ideaGroupSql} WHERE id IN (" .
+                    implode(',', $ideaIds) . ')' 
+                );
+            }
+        });
+    }
+
+    private function buildCaseSql(array $cases, string $columnName): string
+    {
+        $clauses = [];
+
+        foreach ($cases as $id => $value) {
+            $clauses[] = "WHEN {$id} THEN {$value}";
+        }
+
+        return 'CASE id ' . implode(' ', $clauses) . " ELSE {$columnName} END";
+    }
+
     /**
      *     ( )
      */

@@ -261,6 +261,26 @@ export async function reorderIdeaGroups(groups: Array<{ id: number; [key: string
     }
 }
 
+export async function reorderPlan(
+    planId: number,
+    groups: Array<{
+        id: number;
+        sort_order: number;
+        ideas: Array<{ id: number; sort_order: number; group_id: number }>;
+    }>
+) {
+    try {
+        const response = await axiosInstance.patch(`/plans/${planId}/order`, {
+            groups,
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error('Failed to reorder plan:', error);
+        throw error;
+    }
+}
+
 /**
  * Reorder ideas within a group by updating sort_order for each idea
  * based on their position in the provided array

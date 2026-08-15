@@ -27,12 +27,10 @@ import {
     updateIdea,
     deleteIdea,
     updatePlan,
-    moveIdea,
     createIdeaGroup,
     updateIdeaGroup,
     deleteIdeaGroup,
-    reorderIdeaGroups,
-    reorderIdeas,
+    reorderPlan,
 } from '@/lib/api';
 import type { PlanDetail, IdeaGroup } from '@/types/ideas';
 
@@ -75,11 +73,7 @@ export default function PlanDetailPage(): JSX.Element {
     const [savingOrder, setSavingOrder] = useState(false);
 
     // Load plan details and ideas on mount
-    useEffect(() => {
-        loadPlanData();
-    }, [planId]);
-
-    async function loadPlanData() {
+    const loadPlanData = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -144,7 +138,11 @@ export default function PlanDetailPage(): JSX.Element {
         } finally {
             setLoading(false);
         }
-    }
+    }, [planId]);
+
+    useEffect(() => {
+        loadPlanData();
+    }, [loadPlanData]);
 
     // Configure sensors for dnd-kit (touch + mouse + keyboard)
     const sensors = useSensors(
@@ -288,27 +286,16 @@ export default function PlanDetailPage(): JSX.Element {
         setShowGroupModal(true);
     }, []);
 
-    const persistIdeaOrder = useCallback(async (updatedGroups: IdeaGroup[]) => {
-        setSavingOrder(true);
-
-        try {
-            await Promise.all(
-                updatedGroups.map((group) =>
-                    reorderIdeas(
-                        group.ideas.map((idea, index) => ({
-                            ...idea,
-                            sort_order: index,
-                        }))
-                    )
-                )
-            );
-        } catch (err) {
-            setError('Failed to save idea order');
-            console.error('Failed to persist idea order:', err);
-            throw err;
-        } finally {
-            setSavingOrder(false);
-        }
+    const buildReorderPayload = useCallback((groups: IdeaGroup[]) => {
+        return groups.map((group, groupIndex) => ({
+            id: group.id,
+            sort_order: groupIndex,
+            ideas: group.ideas.map((idea, ideaIndex) => ({
+                id: idea.id,
+                sort_order: ideaIndex,
+                group_id: group.id,
+            })),
+        }));
     }, []);
 
     const handleDragStart = useCallback((event: any) => {
@@ -318,8 +305,9 @@ export default function PlanDetailPage(): JSX.Element {
     const handleDragEnd = useCallback(async (event: DragEndEvent) => {
         const { active, over } = event;
 
+        setActiveId(null);
+
         if (!over) {
-            setActiveId(null);
             return;
         }
 
@@ -327,162 +315,135 @@ export default function PlanDetailPage(): JSX.Element {
         const overData = over.data.current as any;
 
         if (!activeData) {
-            setActiveId(null);
             return;
         }
 
-        // Case 1: Reorder ideas within same group (idea on idea)
+        const saveReorder = async (updatedGroups: IdeaGroup[]) => {
+            setIdeaGroups(updatedGroups);
+            setSavingOrder(true);
+
+            try {
+                await reorderPlan(planId, buildReorderPayload(updatedGroups));
+            } catch (err) {
+                setError('Failed to save order');
+                console.error('Failed to save order:', err);
+                await loadPlanData();
+            } finally {
+                setSavingOrder(false);
+            }
+        };
+
+        const normalizedGroups = ideaGroups.map((group) => ({
+            ...group,
+            idea_count: group.ideas.length,
+        }));
+
         if (activeData.type === 'Idea' && overData?.type === 'Idea') {
             const activeGroupId = (activeData as DragDataIdea).fromGroupId;
             const overGroupId = (overData as DragDataIdea).fromGroupId;
             const ideaId = (activeData as DragDataIdea).idea.id;
 
-            if (activeGroupId === overGroupId) {
-                // Reorder within same group
-                const groupIndex = ideaGroups.findIndex((g) => g.id === activeGroupId);
-                if (groupIndex === -1) {
-                    setActiveId(null);
-                    return;
-                }
+            const sourceGroupIndex = normalizedGroups.findIndex((g) => g.id === activeGroupId);
+            const targetGroupIndex = normalizedGroups.findIndex((g) => g.id === overGroupId);
 
-                const oldIndex = ideaGroups[groupIndex].ideas.findIndex((i) => i.id === ideaId);
-                const newIndex = ideaGroups[groupIndex].ideas.findIndex(
-                    (i) => i.id === (overData as DragDataIdea).idea.id
-                );
-
-                if (oldIndex !== -1 && newIndex !== -1) {
-                    const updatedGroups = [...ideaGroups];
-                    updatedGroups[groupIndex].ideas = arrayMove(
-                        updatedGroups[groupIndex].ideas,
-                        oldIndex,
-                        newIndex
-                    );
-                    setIdeaGroups(updatedGroups);
-
-                    // Persist sort_order to API and refresh from server
-                    try {
-                        await persistIdeaOrder(updatedGroups);
-                        await loadPlanData();
-                    } catch (err) {
-                        const message = 'Failed to save idea order';
-                        setError(message);
-                        console.error('Failed to reorder ideas:', err);
-                        await loadPlanData();
-                    }
-                }
-            } else {
-                // Move between groups
-                const idea = ideaGroups
-                    .find((g) => g.id === activeGroupId)
-                    ?.ideas.find((i) => i.id === ideaId);
-
-                if (idea) {
-                    try {
-                        await moveIdea(ideaId, overGroupId);
-                        
-                        // Update UI
-                        const updatedGroups = ideaGroups.map((group) => {
-                            if (group.id === activeGroupId) {
-                                return {
-                                    ...group,
-                                    ideas: group.ideas.filter((i) => i.id !== idea.id),
-                                    idea_count: Math.max(0, (group.idea_count || 1) - 1),
-                                };
-                            }
-                            if (group.id === overGroupId) {
-                                return {
-                                    ...group,
-                                    ideas: [...group.ideas, { ...idea, group_id: overGroupId }],
-                                    idea_count: (group.idea_count || 0) + 1,
-                                };
-                            }
-                            return group;
-                        });
-                        setIdeaGroups(updatedGroups);
-                        await persistIdeaOrder(updatedGroups);
-                        await loadPlanData();
-                    } catch (err) {
-                        setError('Failed to move idea');
-                        console.error('Failed to move idea:', err);
-                    }
-                }
+            if (sourceGroupIndex === -1 || targetGroupIndex === -1) {
+                return;
             }
-        }
-        
-        // Case 2: Drop idea on group drop zone (for easier cross-group moves)
-        else if (activeData.type === 'Idea' && overData?.type === 'IdeaGroupDropZone') {
+
+            const sourceGroup = normalizedGroups[sourceGroupIndex];
+            const targetGroup = normalizedGroups[targetGroupIndex];
+            const activeIdeaIndex = sourceGroup.ideas.findIndex((i) => i.id === ideaId);
+            const overIdeaIndex = targetGroup.ideas.findIndex(
+                (i) => i.id === (overData as DragDataIdea).idea.id
+            );
+
+            if (activeGroupId === overGroupId) {
+                if (activeIdeaIndex !== -1 && overIdeaIndex !== -1 && activeIdeaIndex !== overIdeaIndex) {
+                    const updatedGroups = [...normalizedGroups];
+                    updatedGroups[sourceGroupIndex] = {
+                        ...sourceGroup,
+                        ideas: arrayMove(sourceGroup.ideas, activeIdeaIndex, overIdeaIndex),
+                    };
+                    await saveReorder(updatedGroups);
+                }
+            } else if (activeIdeaIndex !== -1 && overIdeaIndex !== -1) {
+                const idea = sourceGroup.ideas[activeIdeaIndex];
+                const updatedGroups = normalizedGroups.map((group) => {
+                    if (group.id === activeGroupId) {
+                        return {
+                            ...group,
+                            ideas: group.ideas.filter((item) => item.id !== idea.id),
+                        };
+                    }
+
+                    if (group.id === overGroupId) {
+                        return {
+                            ...group,
+                            ideas: [
+                                ...group.ideas.slice(0, overIdeaIndex),
+                                { ...idea, group_id: overGroupId },
+                                ...group.ideas.slice(overIdeaIndex),
+                            ],
+                        };
+                    }
+
+                    return group;
+                });
+
+                await saveReorder(updatedGroups);
+            }
+        } else if (activeData.type === 'Idea' && overData?.type === 'IdeaGroupDropZone') {
             const activeGroupId = (activeData as DragDataIdea).fromGroupId;
             const targetGroupId = overData.groupId;
             const ideaId = (activeData as DragDataIdea).idea.id;
 
-            // Only process if moving to different group
-            if (activeGroupId !== targetGroupId) {
-                const idea = ideaGroups
-                    .find((g) => g.id === activeGroupId)
-                    ?.ideas.find((i) => i.id === ideaId);
-
-                if (idea) {
-                    try {
-                        await moveIdea(ideaId, targetGroupId);
-                        
-                        // Update UI
-                        const updatedGroups = ideaGroups.map((group) => {
-                            if (group.id === activeGroupId) {
-                                return {
-                                    ...group,
-                                    ideas: group.ideas.filter((i) => i.id !== idea.id),
-                                    idea_count: Math.max(0, (group.idea_count || 1) - 1),
-                                };
-                            }
-                            if (group.id === targetGroupId) {
-                                return {
-                                    ...group,
-                                    ideas: [...group.ideas, { ...idea, group_id: targetGroupId }],
-                                    idea_count: (group.idea_count || 0) + 1,
-                                };
-                            }
-                            return group;
-                        });
-                        setIdeaGroups(updatedGroups);
-                        await persistIdeaOrder(updatedGroups);
-                        await loadPlanData();
-                    } catch (err) {
-                        setError('Failed to move idea between groups');
-                        console.error('Failed to move idea:', err);
-                    }
-                }
+            if (activeGroupId === targetGroupId) {
+                return;
             }
+
+            const sourceGroup = normalizedGroups.find((g) => g.id === activeGroupId);
+            const targetGroup = normalizedGroups.find((g) => g.id === targetGroupId);
+            const activeIdea = sourceGroup?.ideas.find((idea) => idea.id === ideaId);
+
+            if (!sourceGroup || !targetGroup || !activeIdea) {
+                return;
+            }
+
+            const updatedGroups = normalizedGroups.map((group) => {
+                if (group.id === activeGroupId) {
+                    return {
+                        ...group,
+                        ideas: group.ideas.filter((idea) => idea.id !== ideaId),
+                    };
+                }
+
+                if (group.id === targetGroupId) {
+                    return {
+                        ...group,
+                        ideas: [...group.ideas, { ...activeIdea, group_id: targetGroupId }],
+                    };
+                }
+
+                return group;
+            });
+
+            await saveReorder(updatedGroups);
         }
 
-        // Case 3: Moving groups - reorder persisted to backend
         if (activeData.type === 'IdeaGroup' && overData?.type === 'IdeaGroup') {
-            const oldIndex = ideaGroups.findIndex(
+            const oldIndex = normalizedGroups.findIndex(
                 (g) => g.id === (activeData as DragDataGroup).group.id
             );
-            const newIndex = ideaGroups.findIndex((g) => g.id === (overData as DragDataGroup).group.id);
+            const newIndex = normalizedGroups.findIndex(
+                (g) => g.id === (overData as DragDataGroup).group.id
+            );
 
             if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-                const reorderedGroups = arrayMove(ideaGroups, oldIndex, newIndex);
-                setIdeaGroups(reorderedGroups);
-                
-                // Persist group order to backend
-                setSavingOrder(true);
-                try {
-                    await reorderIdeaGroups(reorderedGroups);
-                    await loadPlanData();
-                } catch (err) {
-                    setError('Failed to save group order');
-                    console.error('Failed to reorder groups:', err);
-                    // Revert to original order on error
-                    loadPlanData();
-                } finally {
-                    setSavingOrder(false);
-                }
+                const reorderedGroups = arrayMove(normalizedGroups, oldIndex, newIndex);
+                await saveReorder(reorderedGroups);
             }
         }
-
-        setActiveId(null);
-    }, [ideaGroups, loadPlanData]);
+    }, [ideaGroups, planId, buildReorderPayload, loadPlanData]);
 
     const getStatusColor = (status: string) => {
         switch (status) {

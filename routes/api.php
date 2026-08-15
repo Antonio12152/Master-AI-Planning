@@ -42,6 +42,7 @@ Route::middleware([
     // Idea Groups CRUD
     Route::get('/plans/{plan}/groups', [IdeaController::class, 'indexGroups'])->name('plans.groups.index');
     Route::post('/plans/{plan}/groups', [IdeaController::class, 'storeGroup'])->name('plans.groups.store');
+    Route::patch('/plans/{plan}/order', [IdeaController::class, 'reorderPlan'])->name('plans.order');
     Route::put('/idea-groups/{group}', [IdeaController::class, 'updateGroup'])->name('groups.update');
     Route::delete('/idea-groups/{group}', [IdeaController::class, 'destroyGroup'])->name('groups.destroy');
 

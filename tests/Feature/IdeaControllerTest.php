@@ -295,6 +295,68 @@ describe('IdeaController', function () {
         });
     });
 
+    describe('reorderPlan()', function () {
+        test('reorders groups and ideas in a single batch for authorized user', function () {
+            $group2 = IdeaGroup::factory()->create(['plan_id' => $this->plan->id]);
+
+            $idea1 = Idea::factory()->create(['group_id' => $this->group->id, 'plan_id' => $this->plan->id, 'sort_order' => 0]);
+            $idea2 = Idea::factory()->create(['group_id' => $this->group->id, 'plan_id' => $this->plan->id, 'sort_order' => 1]);
+            $idea3 = Idea::factory()->create(['group_id' => $group2->id, 'plan_id' => $this->plan->id, 'sort_order' => 0]);
+
+            $response = $this->actingAs($this->user)
+                ->patchJson("/api/plans/{$this->plan->id}/order", [
+                    'groups' => [
+                        [
+                            'id' => $group2->id,
+                            'sort_order' => 0,
+                            'ideas' => [
+                                ['id' => $idea3->id, 'sort_order' => 0],
+                                ['id' => $idea1->id, 'sort_order' => 1],
+                            ],
+                        ],
+                        [
+                            'id' => $this->group->id,
+                            'sort_order' => 1,
+                            'ideas' => [
+                                ['id' => $idea2->id, 'sort_order' => 0],
+                            ],
+                        ],
+                    ],
+                ]);
+
+            expect($response->status())->toBe(200);
+            expect(IdeaGroup::find($group2->id)->sort_order)->toBe(0);
+            expect(IdeaGroup::find($this->group->id)->sort_order)->toBe(1);
+            expect(Idea::find($idea1->id)->group_id)->toBe($group2->id);
+            expect(Idea::find($idea1->id)->sort_order)->toBe(1);
+            expect(Idea::find($idea2->id)->group_id)->toBe($this->group->id);
+            expect(Idea::find($idea2->id)->sort_order)->toBe(0);
+            expect(Idea::find($idea3->id)->group_id)->toBe($group2->id);
+            expect(Idea::find($idea3->id)->sort_order)->toBe(0);
+        });
+
+        test('forbids batch reorder when user cannot edit the plan', function () {
+            $planOther = Plan::factory()->create(['user_id' => $this->otherUser->id]);
+            $groupOther = IdeaGroup::factory()->create(['plan_id' => $planOther->id]);
+            $ideaOther = Idea::factory()->create(['group_id' => $groupOther->id, 'plan_id' => $planOther->id]);
+
+            $response = $this->actingAs($this->user)
+                ->patchJson("/api/plans/{$planOther->id}/order", [
+                    'groups' => [
+                        [
+                            'id' => $groupOther->id,
+                            'sort_order' => 0,
+                            'ideas' => [
+                                ['id' => $ideaOther->id, 'sort_order' => 0],
+                            ],
+                        ],
+                    ],
+                ]);
+
+            expect($response->status())->toBe(403);
+        });
+    });
+
     describe('complete()', function () {
         test('marks idea as complete', function () {
             $idea = Idea::factory()->create([

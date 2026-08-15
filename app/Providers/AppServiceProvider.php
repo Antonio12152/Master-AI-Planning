@@ -57,18 +57,37 @@ class AppServiceProvider extends ServiceProvider
 
     protected function resolveAppUrl(?Request $request): ?string
     {
-        if ($request === null) {
-            return env('APP_URL');
+        $configuredUrl = null;
+
+        if ($this->app->bound('config')) {
+            $configuredUrl = $this->app['config']->get('app.url');
         }
 
-        $configuredUrl = env('APP_URL');
+        if (! $configuredUrl) {
+            $configuredUrl = env('APP_URL');
+        }
+
+        if ($request === null) {
+            return $configuredUrl;
+        }
+
         $isSecureRequest = $this->requestIsSecure($request);
-        $scheme = $isSecureRequest ? 'https' : ($configuredUrl ? parse_url($configuredUrl, PHP_URL_SCHEME) : $request->getScheme());
 
         if ($configuredUrl) {
             $parsedUrl = parse_url($configuredUrl);
-            $host = $request->getHost() ?: ($parsedUrl['host'] ?? null);
-            $port = $request->getPort() ?: ($parsedUrl['port'] ?? null);
+            $configuredHost = $parsedUrl['host'] ?? null;
+            $requestHost = $request->getHost();
+            $host = $configuredHost && ! in_array(strtolower($configuredHost), ['localhost', '127.0.0.1'], true)
+                ? $configuredHost
+                : ($requestHost ?: $configuredHost);
+            $port = $parsedUrl['port'] ?? $request->getPort();
+            $configuredScheme = $parsedUrl['scheme'] ?? $request->getScheme();
+            $scheme = $isSecureRequest ? 'https' : $configuredScheme;
+
+            if ($host === null) {
+                return null;
+            }
+
             $appUrl = $scheme.'://'.$host;
 
             if ($port !== null && $port !== 80 && $port !== 443) {
@@ -77,6 +96,8 @@ class AppServiceProvider extends ServiceProvider
 
             return $appUrl;
         }
+
+        $scheme = $isSecureRequest ? 'https' : $request->getScheme();
 
         if ($request->getHost()) {
             return $scheme.'://'.$request->getHost();

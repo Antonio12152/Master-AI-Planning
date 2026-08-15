@@ -146,6 +146,36 @@ class IdeaController extends Controller
         return response()->json($idea);
     }
 
+    public function reorderPlan(Request $request, Plan $plan): JsonResponse
+    {
+        if (!$plan->canEdit($request->user())) {
+            return response()->json([
+                'message' => 'No rights to reorder this plan'
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'groups' => 'required|array|min:1',
+            'groups.*.id' => 'required|integer|exists:idea_groups,id',
+            'groups.*.sort_order' => 'required|integer|min:0',
+            'groups.*.ideas' => 'required|array',
+            'groups.*.ideas.*.id' => 'required|integer|exists:ideas,id',
+            'groups.*.ideas.*.sort_order' => 'required|integer|min:0',
+        ]);
+
+        try {
+            $this->ideaService->batchReorderPlan($plan, $validated['groups']);
+        } catch (\InvalidArgumentException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'Plan order updated',
+        ]);
+    }
+
     public function complete(Request $request, Idea $idea): JsonResponse
     {
         if (!$idea->plan->canEdit($request->user())) {
